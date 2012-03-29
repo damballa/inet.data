@@ -88,7 +88,7 @@ bytes in the label."
                        [(conj state (take n data))
                         (drop n data)])))
           (ffilter (comp empty? second))
-          first (apply concat) byte-array))
+          first (drop 1) (apply concat) byte-array))
   ([wire ^long offset ^long length]
      (wire->bytes (->> wire (drop offset) (take length)))))
 
@@ -107,25 +107,6 @@ standard string form."
           (str/join ".")))
   ([bytes ^long offset ^long length]
      (bytes->name (->> bytes (drop offset) (take length)))))
-
-(defn domain-next
-  "For the domain child which is a subdomain of domain parent, return the
-immediate child domain of parent which is either identical to child or also a
-parent domain of child.  Returns nil if there is no such domain.  Uses the
-implied empty root domain as the parent if not provided."
-  ([child]
-     (domain-next child nil))
-  ([child parent]
-     (let [^bytes bytes (domain-bytes child), length (domain-length parent)]
-       (when (< length (domain-length child))
-         (DNSDomain. nil bytes (+ length (ubyte (aget bytes length)) 1))))))
-
-(defn domain-ancestors
-  "Generate a seq of the all the domains for which the provided domain is a
-proper subdomain, starting with the domain's TLD and ending with the domain
-itself."
-  [domain] (->> (iterate #(domain-next domain %) nil) (drop 1)
-                (take-while identity)))
 
 (deftype DNSDomain [^IPersistentMap meta, ^bytes bytes, ^long length]
   Object
@@ -173,6 +154,25 @@ itself."
   (if (domain?* bytes)
     (DNSDomain. nil bytes (alength bytes))
     (domain-error "%s: invalid domain" (str orig))))
+
+(defn domain-next
+  "For the domain child which is a subdomain of domain parent, return the
+immediate child domain of parent which is either identical to child or also a
+parent domain of child.  Returns nil if there is no such domain.  Uses the
+implied empty root domain as the parent if not provided."
+  ([child]
+     (domain-next child nil))
+  ([child parent]
+     (let [^bytes bytes (domain-bytes child), length (domain-length parent)]
+       (when (< length (domain-length child))
+         (DNSDomain. nil bytes (+ length (ubyte (aget bytes length)) 1))))))
+
+(defn domain-ancestors
+  "Generate a seq of the all the domains for which the provided domain is a
+proper subdomain, starting with the domain's TLD and ending with the domain
+itself."
+  [domain] (->> (iterate #(domain-next domain %) nil) (drop 1)
+                (take-while identity)))
 
 (extend-type (java.lang.Class/forName "[B")
   DNSDomainConstruction

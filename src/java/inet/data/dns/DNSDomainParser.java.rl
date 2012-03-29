@@ -67,7 +67,7 @@ isValidHostname(byte[] data) {
         hyp = "-" when in_label;
         let_dig_hyp = let_dig | hyp;
         ldh_str = let_dig_hyp+;
-        content = ( let_dig (ldh_str? let_dig)? "." );
+        content = ( let_dig (ldh_str? let_dig)? );
         label = length content;
         domain = label+;
 

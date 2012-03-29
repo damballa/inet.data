@@ -336,7 +336,7 @@ private static final byte _hostname_actions[] = init__hostname_actions_0();
 private static byte[] init__hostname_cond_offsets_0()
 {
 	return new byte [] {
-	    0,    0,    0,    3,    7,   11
+	    0,    0,    0,    3,    7
 	};
 }
 
@@ -346,7 +346,7 @@ private static final byte _hostname_cond_offsets[] = init__hostname_cond_offsets
 private static byte[] init__hostname_cond_lengths_0()
 {
 	return new byte [] {
-	    0,    0,    3,    4,    4,    0
+	    0,    0,    3,    4,    4
 	};
 }
 
@@ -377,7 +377,7 @@ private static final byte _hostname_cond_spaces[] = init__hostname_cond_spaces_0
 private static byte[] init__hostname_key_offsets_0()
 {
 	return new byte [] {
-	    0,    0,    2,    8,   16,   23
+	    0,    0,    2,    8,   15
 	};
 }
 
@@ -387,9 +387,9 @@ private static final byte _hostname_key_offsets[] = init__hostname_key_offsets_0
 private static short[] init__hostname_trans_keys_0()
 {
 	return new short [] {
-	    1,   63,  560,  569,  577,  602,  609,  634,   46,  557,  560,  569,
-	  577,  602,  609,  634,  557,  560,  569,  577,  602,  609,  634,    1,
-	   63,    0
+	    1,   63,  560,  569,  577,  602,  609,  634,  557,  560,  569,  577,
+	  602,  609,  634,  301,  557,    1,   44,   46,   47,   58,   63,  304,
+	  313,  560,  569,  577,  602,  609,  634,    0
 	};
 }
 
@@ -399,7 +399,7 @@ private static final short _hostname_trans_keys[] = init__hostname_trans_keys_0(
 private static byte[] init__hostname_single_lengths_0()
 {
 	return new byte [] {
-	    0,    0,    0,    2,    1,    0
+	    0,    0,    0,    1,    2
 	};
 }
 
@@ -409,7 +409,7 @@ private static final byte _hostname_single_lengths[] = init__hostname_single_len
 private static byte[] init__hostname_range_lengths_0()
 {
 	return new byte [] {
-	    0,    1,    3,    3,    3,    1
+	    0,    1,    3,    3,    7
 	};
 }
 
@@ -419,7 +419,7 @@ private static final byte _hostname_range_lengths[] = init__hostname_range_lengt
 private static byte[] init__hostname_index_offsets_0()
 {
 	return new byte [] {
-	    0,    0,    2,    6,   12,   17
+	    0,    0,    2,    6,   11
 	};
 }
 
@@ -429,8 +429,8 @@ private static final byte _hostname_index_offsets[] = init__hostname_index_offse
 private static byte[] init__hostname_indicies_0()
 {
 	return new byte [] {
-	    0,    1,    2,    2,    2,    1,    3,    4,    2,    2,    2,    1,
-	    4,    2,    2,    2,    1,    0,    1,    0
+	    0,    1,    2,    2,    2,    1,    3,    2,    2,    2,    1,    0,
+	    4,    0,    0,    0,    0,    5,    2,    2,    1,    0
 	};
 }
 
@@ -440,7 +440,7 @@ private static final byte _hostname_indicies[] = init__hostname_indicies_0();
 private static byte[] init__hostname_trans_targs_0()
 {
 	return new byte [] {
-	    2,    0,    3,    5,    4
+	    2,    0,    4,    3,    3,    4
 	};
 }
 
@@ -450,7 +450,7 @@ private static final byte _hostname_trans_targs[] = init__hostname_trans_targs_0
 private static byte[] init__hostname_trans_actions_0()
 {
 	return new byte [] {
-	    1,    0,    0,    0,    0
+	    1,    0,    0,    0,    1,    1
 	};
 }
 
@@ -458,7 +458,7 @@ private static final byte _hostname_trans_actions[] = init__hostname_trans_actio
 
 
 static final int hostname_start = 1;
-static final int hostname_first_final = 5;
+static final int hostname_first_final = 4;
 static final int hostname_error = 0;
 
 static final int hostname_en_main = 1;

@@ -1,5 +1,18 @@
 (ns inet.data.dns
-  "Functions for interacting with DNS domain names."
+  "Functions for interacting with DNS domain names.
+
+Internally represents domain names using an normalized byte-oriented form.  The
+normalized form is defined as: (a) all characters converted to lowercase; (b)
+domain labels punycode-encoded; (c) domain labels arranged from top-level to
+bottom-level (i.e., reversed from typical order); and (d) every label preceded
+by a byte indicating the count of bytes in the label.
+
+This form has the following benefits: (a) it may accurately represent any
+binary data, just like the DNS wire form; (b) lexicographic byte order is also
+hierarchical order; and (c) for a given child domain and ancestor domain, one
+may easily find the next longer ancestor of the child.  The primary down-side
+is that this form does make it more difficult to find the immediate parent of a
+given domain."
   (:require [clojure.string :as str])
   (:use [inet.data.util :only [ffilter ubyte sbyte bytes-hash-code]])
   (:import [clojure.lang IFn ILookup IObj IPersistentMap]
@@ -37,7 +50,7 @@ full-label length of the two domains."
         len1 (domain-length left), len2 (domain-length right),
         length (long (min len1 len2))]
     (loop [i (long 0)]
-      (if (< i length)
+      (if (>= i length)
         (if-not stable 0 (- len1 len2))
         (let [b1 (aget dom1 i), b2 (aget dom2 i)]
           (if (not= b1 b2)
@@ -69,12 +82,12 @@ parent."
     (and (< length (domain-length child))
          (zero? (domain-compare* false length parent child)))))
 
+(defn domain-hostname?
+  "Determine if the provided domain is a valid hostname."
+  [domain] (DNSDomainParser/isValidHostname (domain-bytes domain)))
+
 (defn- name->bytes
-  "Convert a string domain name into an internal normalized byte form.  The
-normalized form is defined as: (a) punycode-encoded; (b) all lowercase; (c)
-domain labels arranged from top-level to bottom-level (i.e., reversed from
-typical order); and (d) every label preceded by a byte indicating the count of
-bytes in the label."
+  "Convert a string domain name into an internal normalized byte form."
   [name] (->> name str/lower-case (#(str/split % #"\." -1)) reverse
               (mapcat (fn [s]
                         (let [bytes (.getBytes (IDN/toASCII s))]
@@ -82,7 +95,7 @@ bytes in the label."
               byte-array))
 
 (defn- wire->bytes
-  "Convert a DNS wire form domain name into an internal normalized byte form."
+  "Convert a DNS wire-form domain name into an internal normalized byte form."
   ([wire]
      (->> [nil wire]
           (iterate (fn [[state data]]
@@ -152,6 +165,7 @@ standard string form."
   (DNSDomain. nil (byte-array []) 0))
 
 (defn- domain*
+  "Private bytes->domain factory."
   [orig ^bytes bytes]
   (if (domain?* bytes)
     (DNSDomain. nil bytes (alength bytes))

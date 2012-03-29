@@ -76,8 +76,10 @@ domain labels arranged from top-level to bottom-level (i.e., reversed from
 typical order); and (d) every label preceded by a byte indicating the count of
 bytes in the label."
   [name] (->> name str/lower-case (#(str/split % #"\." -1)) reverse
-              (mapcat #(cons (count %) (.getBytes (IDN/toASCII %))))
-              (map sbyte) byte-array))
+              (mapcat (fn [s]
+                        (let [bytes (.getBytes (IDN/toASCII s))]
+                          (cons (sbyte (count bytes)) bytes))))
+              byte-array))
 
 (defn- wire->bytes
   "Convert a DNS wire form domain name into an internal normalized byte form."

@@ -9,7 +9,7 @@
            [java.net InetAddress]))
 
 (defprotocol IPAddressConstruction
-  "Construct a full network object."
+  "Construct a full address object."
   (address [addr]
     "Create an IPAddress from another representation."))
 

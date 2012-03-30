@@ -305,15 +305,3 @@ prefix length."
     ([this] false)
     ([this length] (network?* (address-bytes this) length)))
   (network-length [this] (address-length this)))
-
-(defmethod clojure.core/print-method IPAddress
-  ([^IPAddress net ^java.io.Writer w]
-     (.write w "#<IPAddress ")
-     (.write w (str net))
-     (.write w ">")))
-
-(defmethod clojure.core/print-method IPNetwork
-  ([^IPNetwork net ^java.io.Writer w]
-     (.write w "#<IPNetwork ")
-     (.write w (str net))
-     (.write w ">")))

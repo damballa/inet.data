@@ -172,10 +172,10 @@ standard string form."
     (domain-error "%s: invalid domain" (str orig))))
 
 (defn domain-next
-  "For the domain child which is a subdomain of domain parent, return the
-immediate child domain of parent which is either identical to child or also a
-parent domain of child.  Returns nil if there is no such domain.  Uses the
-implied empty root domain as the parent if not provided."
+  "For the domain `child` which is a subdomain of domain `parent`, return the
+immediate child domain of `parent` which is either identical to `child` or also
+a parent domain of `child`.  Returns `nil` if there is no such domain.  Uses
+the implied empty root domain as `parent` if not provided."
   ([child]
      (domain-next child nil))
   ([child parent]

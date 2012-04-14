@@ -1,4 +1,4 @@
-(ns inet.data.test.ip
+(ns inet.data.ip-test
   (:require [inet.data.ip :as ip])
   (:use [clojure.test])
   (:import [java.net InetAddress]))

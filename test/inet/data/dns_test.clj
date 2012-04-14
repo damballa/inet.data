@@ -1,4 +1,4 @@
-(ns inet.data.test.dns
+(ns inet.data.dns-test
   (:require [inet.data.dns :as dns])
   (:use [clojure.test]))
 

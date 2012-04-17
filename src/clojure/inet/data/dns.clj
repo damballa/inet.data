@@ -1,11 +1,11 @@
 (ns inet.data.dns
   "Functions for interacting with DNS domain names.
 
-Internally represents domain names using an normalized byte-oriented form.  The
-normalized form is defined as: (a) all characters converted to lowercase; (b)
-domain labels punycode-encoded; (c) domain labels arranged from top-level to
-bottom-level (i.e., reversed from typical order); and (d) every label preceded
-by a byte indicating the count of bytes in the label.
+Internally represents domain names using a normalized byte-oriented form.  The
+normalized form is defined as: (a) IDN labels IDNA-encoded; (b) domain labels
+arranged from top-level to bottom-level (i.e., reversed from typical order);
+and (c) every label preceded by a byte indicating the count of bytes in the
+label.
 
 This form has the following benefits: (a) it may accurately represent any
 binary data, just like the DNS wire form; (b) lexicographic byte order is also
@@ -29,7 +29,7 @@ given domain."
   "Operations on objects which may be treated as domains."
   (^:private domain?* [dom]
     "Returns whether or not the value represents a valid domain.")
-  (^:private domain-bytes [dom]
+  (domain-bytes [dom]
     "Retrieve the internal normalized byte form of the domain.")
   (domain-length [dom]
     "The length in bytes of this domain."))
@@ -42,45 +42,44 @@ given domain."
 (defn- domain-error [msg & args]
   (throw (DNSDomainException. ^String (apply format msg args))))
 
-(defn- domain-compare*
-  "Private version of domain-compare.  The value of length must be the minimum
-full-label length of the two domains."
-  ^long [stable length left right]
-  (let [^bytes dom1 (domain-bytes left), ^bytes dom2 (domain-bytes right),
-        len1 (domain-length left), len2 (domain-length right),
-        length (long (min len1 len2))]
-    (loop [i (long 0)]
-      (if (>= i length)
-        (if-not stable 0 (- len1 len2))
-        (let [b1 (aget dom1 i), b2 (aget dom2 i)]
-          (if (not= b1 b2)
-            (- (ubyte b1) (ubyte b2))
-            (recur (inc i))))))))
+(defn- case-fold-ubyte
+  "Interpret byte `b` as unsigned integral value; if in the range of the ASCII
+code-points for uppercase letters, fold to the code-point for the corresponding
+lowercase letter."
+  [b] (let [b (ubyte b)] (if (<= (int \A) b (int \Z)) (bit-or 0x20 b) b)))
 
 (defn domain-compare
-  "Compare two domains, with the same result semantics as compare.  When stable
-is true (the default), 0 will only be returned when the domains are
-value-identical.  When stable is false, 0 will be returned as long as the
-networks are identical up to their minimum common full-label length."
-  (^long [left right] (domain-compare true left right))
-  (^long [stable left right]
-     (let [length (min (domain-length left) (domain-length right))]
-       (domain-compare* stable length left right))))
+  "Compare two domains, with the same result semantics as `compare`.  When
+`stable` is true (the default), 0 will only be returned when the domains are
+value-identical.  When `stable` is false, 0 will be returned as long as the
+networks are identical up to their minimum common full-label length.  When
+`case-fold` is true (the default), domains will be compared in a
+case-independent fashion."
+  (^long [left right] (domain-compare true true left right))
+  (^long [stable left right] (domain-compare stable true left right))
+  (^long [stable case-fold left right]
+     (let [byte-value (if case-fold case-fold-ubyte ubyte),
+           ^bytes dom1 (domain-bytes left), ^bytes dom2 (domain-bytes right),
+           len1 (alength dom1), len2 (alength dom2),
+           length (long (min len1 len2))]
+       (loop [i (long 0)]
+         (if (>= i length)
+           (if-not stable 0 (- len1 len2))
+           (let [b1 (byte-value (aget dom1 i)), b2 (byte-value (aget dom2 i))]
+             (if (not= b1 b2) (- b1 b2) (recur (inc i)))))))))
 
 (defn domain-contains?
-  "Determine if the domain child is a subdomain of or identical to the domain
-parent."
+  "Determine if the domain `child` is a subdomain of or identical to the domain
+`parent`."
   [parent child]
-  (let [length (domain-length parent)]
-    (and (<= length (domain-length child))
-         (zero? (domain-compare* false length parent child)))))
+  (and (<= (domain-length parent) (domain-length child))
+       (zero? (domain-compare false parent child))))
 
 (defn domain-subdomain?
-  "Determine if the domain child is a subdomain of the domain parent."
+  "Determine if the domain `child` is a subdomain of the domain `parent`."
   [parent child]
-  (let [length (domain-length parent)]
-    (and (< length (domain-length child))
-         (zero? (domain-compare* false length parent child)))))
+  (and (< (domain-length parent) (domain-length child))
+       (zero? (domain-compare false parent child))))
 
 (defn domain-hostname?
   "Determine if the provided domain is a valid hostname."
@@ -88,24 +87,24 @@ parent."
 
 (defn- name->bytes
   "Convert a string domain name into an internal normalized byte form."
-  [name] (->> name str/lower-case (#(str/split % #"\." -1)) reverse
-              (mapcat (fn [s]
-                        (let [bytes (.getBytes (IDN/toASCII s))]
-                          (cons (sbyte (count bytes)) bytes))))
-              byte-array))
+  ^bytes [name]
+  (->> name IDN/toASCII (#(str/split % #"\." -1)) reverse
+       (mapcat #(let [bytes (.getBytes ^String % "US-ASCII")]
+                  (cons (sbyte (count bytes)) bytes)))
+       byte-array))
 
 (defn- wire->bytes
   "Convert a DNS wire-form domain name into an internal normalized byte form."
-  ([wire]
+  (^bytes [wire]
      (->> [nil wire]
           (iterate (fn [[state data]]
                      (let [n (inc (first data))]
                        [(conj state (take n data))
                         (drop n data)])))
-          (ffilter (comp empty? second))
-          first (drop 1) (apply concat) byte-array))
-  ([wire ^long offset ^long length]
-     (wire->bytes (->> wire (drop offset) (take length)))))
+          (ffilter (comp empty? second)) first
+          (drop 1) (apply concat) byte-array))
+  (^bytes [wire ^long offset ^long length]
+     (->> wire (drop offset) (take length) wire->bytes)))
 
 (defn- bytes->name
   "Convert the internal normalized byte form of the domain in bytes into its
@@ -118,8 +117,8 @@ standard string form."
                         (drop n data)])))
           (ffilter (comp empty? second)) first
           (#(if (empty? (first %)) (reverse %) %))
-          (map #(IDN/toUnicode (String. (byte-array %))))
-          (str/join ".")))
+          (map #(String. (byte-array %) "US-ASCII"))
+          (str/join ".") IDN/toUnicode))
   ([bytes ^long offset ^long length]
      (bytes->name (->> bytes (drop offset) (take length)))))
 
@@ -130,7 +129,7 @@ standard string form."
   (equals [this other]
     (and (domain? other)
          (= length (domain-length other))
-         (Arrays/equals bytes ^bytes (domain-bytes other))))
+         (zero? (domain-compare true this other))))
 
   IObj
   (meta [this] meta)
@@ -201,12 +200,12 @@ itself."
 
 (extend-type String
   DNSDomainConstruction
-  (domain [this] (domain* this (domain-bytes this)))
+  (domain [this] (domain* this (name->bytes this)))
 
   DNSDomainOperations
-  (domain?* [this] (domain?* (domain-bytes this)))
+  (domain?* [this] (domain?* (name->bytes this)))
   (domain-bytes [this] (name->bytes this))
-  (domain-length [this] (inc (.length this))))
+  (domain-length [this] (alength (name->bytes this))))
 
 (extend-type nil
   DNSDomainConstruction

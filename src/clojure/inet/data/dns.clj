@@ -10,7 +10,7 @@ label.
 This form has the following benefits: (a) it may accurately represent any
 binary data, just like the DNS wire form; (b) lexicographic byte order is also
 hierarchical order; and (c) for a given child domain and ancestor domain, one
-may easily find the next longer ancestor of the child.  The primary down-side
+may easily find the next longer child of the ancestor.  The primary down-side
 is that this form does make it more difficult to find the immediate parent of a
 given domain."
   (:require [clojure.string :as str])

@@ -35,12 +35,12 @@
     "The length in bits of the network prefix."))
 
 (defn address?
-  "Determine if addr is a value which represents an IP address."
+  "Determine if `addr` is a value which represents an IP address."
   [addr] (and (satisfies? IPAddressOperations addr)
               (boolean (address?* addr))))
 
 (defn network?
-  "Determine if net is a value which represents an IP network."
+  "Determine if `net` is a value which represents an IP network."
   ([net]
      (and (satisfies? IPNetworkOperations net)
           (boolean (network?* net))))
@@ -59,9 +59,9 @@
   (throw (IPNetworkException. ^String (apply format msg args))))
 
 (defn- network-compare*
-  "Private version of network-compare.  The value of length must be the minimum
-common prefix length of the two networks."
-  ^long [stable length left right]
+  "Private version of network-compare.  The value of `length` must be the
+minimum common prefix length of the two networks."
+  ^long [stable ^long length left right]
   (let [^bytes prefix1 (address-bytes left),
         ^bytes prefix2 (address-bytes right),
         len1 (alength prefix1), len2 (alength prefix2)]
@@ -78,10 +78,10 @@ common prefix length of the two networks."
               (recur (inc i) (- rem 8)))))))))
 
 (defn network-compare
-  "Compare the prefixes of networks left and right, with the same result
-semantics as compare.  When stable is true (the default), 0 will only be
-returned when the networks are value-identical; when stable is false, 0 will be
-returned as long as the networks are identical up to their minimum common
+  "Compare the prefixes of networks `left` and `right`, with the same result
+semantics as `compare`.  When `stable` is true (the default), 0 will only be
+returned when the networks are value-identical; when `stable` is false, 0 will
+be returned as long as the networks are identical up to their minimum common
 prefix length."
   (^long [left right] (network-compare true left right))
   (^long [stable left right]
@@ -89,7 +89,7 @@ prefix length."
        (network-compare* stable length left right))))
 
 (defn network-contains?
-  "Determine if network contains the address/network addr."
+  "Determine if network `net` contains the address/network `addr`."
   ([net addr]
      (let [length (network-length net)]
        (and (<= length (network-length addr))

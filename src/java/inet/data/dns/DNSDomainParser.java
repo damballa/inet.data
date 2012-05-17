@@ -4,7 +4,7 @@ package inet.data.dns;
 
 public class DNSDomainParser {
 
-public static final int MAX_DOMAIN_LENGTH = 256;
+public static final int MAX_DOMAIN_LENGTH = 255;
 public static final int MAX_LABEL_LENGTH = 63;
 
 
@@ -74,8 +74,7 @@ private static final byte _domain_key_offsets[] = init__domain_key_offsets_0();
 private static short[] init__domain_trans_keys_0()
 {
 	return new short [] {
-	    1,   63,  384,  639,  257,  319,  384,  512,  513,  575,  576,  639,
-	    0
+	    1,   63,  384,  639,  257,  319,  384,  639,    0
 	};
 }
 
@@ -95,7 +94,7 @@ private static final byte _domain_single_lengths[] = init__domain_single_lengths
 private static byte[] init__domain_range_lengths_0()
 {
 	return new byte [] {
-	    0,    1,    1,    4
+	    0,    1,    1,    2
 	};
 }
 
@@ -115,7 +114,7 @@ private static final byte _domain_index_offsets[] = init__domain_index_offsets_0
 private static byte[] init__domain_indicies_0()
 {
 	return new byte [] {
-	    0,    1,    2,    1,    0,    2,    3,    2,    1,    0
+	    0,    1,    2,    1,    0,    2,    1,    0
 	};
 }
 
@@ -125,7 +124,7 @@ private static final byte _domain_indicies[] = init__domain_indicies_0();
 private static byte[] init__domain_trans_targs_0()
 {
 	return new byte [] {
-	    2,    0,    3,    3
+	    2,    0,    3
 	};
 }
 
@@ -135,7 +134,7 @@ private static final byte _domain_trans_targs[] = init__domain_trans_targs_0();
 private static byte[] init__domain_trans_actions_0()
 {
 	return new byte [] {
-	    1,    0,    0,    1
+	    1,    0,    0
 	};
 }
 
@@ -164,18 +163,18 @@ isValid(byte[] data) {
     int eof = pe;
 
     
-// line 35 "src/java/inet/data/dns/DNSDomainParser.java.rl"
+// line 37 "src/java/inet/data/dns/DNSDomainParser.java.rl"
 
 
     
-// line 172 "src/java/inet/data/dns/DNSDomainParser.java"
+// line 171 "src/java/inet/data/dns/DNSDomainParser.java"
 	{
 	cs = domain_start;
 	}
 
-// line 38 "src/java/inet/data/dns/DNSDomainParser.java.rl"
+// line 40 "src/java/inet/data/dns/DNSDomainParser.java.rl"
     
-// line 179 "src/java/inet/data/dns/DNSDomainParser.java"
+// line 178 "src/java/inet/data/dns/DNSDomainParser.java"
 	{
 	int _klen;
 	int _trans = 0;
@@ -291,7 +290,7 @@ case 1:
 // line 24 "src/java/inet/data/dns/DNSDomainParser.java.rl"
 	{ length = ((int) data[p]) & 0xff; }
 	break;
-// line 295 "src/java/inet/data/dns/DNSDomainParser.java"
+// line 294 "src/java/inet/data/dns/DNSDomainParser.java"
 			}
 		}
 	}
@@ -311,18 +310,18 @@ case 5:
 	break; }
 	}
 
-// line 39 "src/java/inet/data/dns/DNSDomainParser.java.rl"
+// line 41 "src/java/inet/data/dns/DNSDomainParser.java.rl"
 
-    if (cs < domain_first_final)
+    if (cs < domain_first_final || length > 0)
         return false;
     return true;
 }
 
 
 
-// line 47 "src/java/inet/data/dns/DNSDomainParser.java.rl"
+// line 49 "src/java/inet/data/dns/DNSDomainParser.java.rl"
 
-// line 326 "src/java/inet/data/dns/DNSDomainParser.java"
+// line 325 "src/java/inet/data/dns/DNSDomainParser.java"
 private static byte[] init__hostname_actions_0()
 {
 	return new byte [] {
@@ -430,7 +429,7 @@ private static byte[] init__hostname_indicies_0()
 {
 	return new byte [] {
 	    0,    1,    2,    2,    2,    1,    3,    2,    2,    2,    1,    0,
-	    4,    0,    0,    0,    0,    5,    2,    2,    1,    0
+	    3,    0,    0,    0,    0,    2,    2,    2,    1,    0
 	};
 }
 
@@ -440,7 +439,7 @@ private static final byte _hostname_indicies[] = init__hostname_indicies_0();
 private static byte[] init__hostname_trans_targs_0()
 {
 	return new byte [] {
-	    2,    0,    4,    3,    3,    4
+	    2,    0,    4,    3
 	};
 }
 
@@ -450,7 +449,7 @@ private static final byte _hostname_trans_targs[] = init__hostname_trans_targs_0
 private static byte[] init__hostname_trans_actions_0()
 {
 	return new byte [] {
-	    1,    0,    0,    0,    1,    1
+	    1,    0,    0,    0
 	};
 }
 
@@ -464,7 +463,7 @@ static final int hostname_error = 0;
 static final int hostname_en_main = 1;
 
 
-// line 48 "src/java/inet/data/dns/DNSDomainParser.java.rl"
+// line 50 "src/java/inet/data/dns/DNSDomainParser.java.rl"
 
 public static boolean
 isValidHostname(byte[] data) {
@@ -479,18 +478,18 @@ isValidHostname(byte[] data) {
     int eof = pe;
 
     
-// line 77 "src/java/inet/data/dns/DNSDomainParser.java.rl"
+// line 81 "src/java/inet/data/dns/DNSDomainParser.java.rl"
 
 
     
-// line 487 "src/java/inet/data/dns/DNSDomainParser.java"
+// line 486 "src/java/inet/data/dns/DNSDomainParser.java"
 	{
 	cs = hostname_start;
 	}
 
-// line 80 "src/java/inet/data/dns/DNSDomainParser.java.rl"
+// line 84 "src/java/inet/data/dns/DNSDomainParser.java.rl"
     
-// line 494 "src/java/inet/data/dns/DNSDomainParser.java"
+// line 493 "src/java/inet/data/dns/DNSDomainParser.java"
 	{
 	int _klen;
 	int _trans = 0;
@@ -533,8 +532,8 @@ case 1:
 	case 0: {
 		_widec = 128 + (data[p] - -128);
 		if ( 
-// line 63 "src/java/inet/data/dns/DNSDomainParser.java.rl"
- (--length > 0)  ) _widec += 256;
+// line 65 "src/java/inet/data/dns/DNSDomainParser.java.rl"
+ (length-- > 0)  ) _widec += 256;
 		break;
 	}
 				}
@@ -603,10 +602,10 @@ case 1:
 			switch ( _hostname_actions[_acts++] )
 			{
 	case 0:
-// line 62 "src/java/inet/data/dns/DNSDomainParser.java.rl"
+// line 64 "src/java/inet/data/dns/DNSDomainParser.java.rl"
 	{ length = ((int) data[p]) & 0xff; }
 	break;
-// line 610 "src/java/inet/data/dns/DNSDomainParser.java"
+// line 609 "src/java/inet/data/dns/DNSDomainParser.java"
 			}
 		}
 	}
@@ -626,9 +625,9 @@ case 5:
 	break; }
 	}
 
-// line 81 "src/java/inet/data/dns/DNSDomainParser.java.rl"
+// line 85 "src/java/inet/data/dns/DNSDomainParser.java.rl"
 
-    if (cs < domain_first_final)
+    if (cs < domain_first_final || length > 0)
         return false;
     return true;
 }

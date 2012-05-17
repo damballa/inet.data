@@ -2,7 +2,7 @@ package inet.data.dns;
 
 public class DNSDomainParser {
 
-public static final int MAX_DOMAIN_LENGTH = 256;
+public static final int MAX_DOMAIN_LENGTH = 255;
 public static final int MAX_LABEL_LENGTH = 63;
 
 %% machine domain;
@@ -23,10 +23,12 @@ isValid(byte[] data) {
     %%{
         action beg_label { length = ((int) fc) & 0xff; }
         action in_label { (length-- > 0) }
+        action not_in_label { (length <= 0) }
 
         length = 1..63 $beg_label;
         content = ( any when in_label )+;
-        label = length content;
+        terminal = '' when not_in_label;
+        label = length content <: terminal;
         domain = label+;
 
         main := domain;
@@ -37,7 +39,7 @@ isValid(byte[] data) {
     %% write init;
     %% write exec;
 
-    if (cs < domain_first_final)
+    if (cs < domain_first_final || length > 0)
         return false;
     return true;
 }
@@ -60,15 +62,17 @@ isValidHostname(byte[] data) {
 
     %%{
         action beg_label { length = ((int) fc) & 0xff; }
-        action in_label { (--length > 0) }
+        action in_label { (length-- > 0) }
+        action not_in_label { (length <= 0) }
 
         length = 1..63 $beg_label;
         let_dig = alnum when in_label;
         hyp = "-" when in_label;
         let_dig_hyp = let_dig | hyp;
         ldh_str = let_dig_hyp+;
-        content = ( let_dig (ldh_str? let_dig)? );
-        label = length content;
+        content = let_dig (ldh_str? let_dig)?;
+        terminal = '' when not_in_label;
+        label = length content <: terminal;
         domain = label+;
 
         main := domain;
@@ -79,7 +83,7 @@ isValidHostname(byte[] data) {
     %% write init;
     %% write exec;
 
-    if (cs < domain_first_final)
+    if (cs < domain_first_final || length > 0)
         return false;
     return true;
 }

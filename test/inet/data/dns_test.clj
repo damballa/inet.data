@@ -2,7 +2,22 @@
   (:require [inet.data.dns :as dns])
   (:use [clojure.test]))
 
-(deftest test-dns-contains?
+(deftest test-domain?
+  (testing "String domains"
+    (is (dns/domain? "www.foobar.com") "Accepts valid string domains")
+    (is (dns/domain? "this-is-a-valid-domain-even-though-it-has-a-quite-loooong-label.com")
+        "Accepts domains with the maximum label length")
+    (is (not (dns/domain? "this-is-an-invalid-domain-because-it-has-an-overlong-label-by-un.com"))
+        "Rejects domains with overlong labels")
+    (is (not (dns/domain? "this-is-an-invalid-domain-because-it-has-an-overlong-label-by-two.com"))
+        "Rejects domains with even overlong-er labels"))
+  (testing "Byte domains"
+    (is (dns/domain? (byte-array (map byte [3 64 64 64 3 99 111 109])))
+        "Accepts valid byte domains")
+    (is (not (dns/domain? (byte-array (map byte [3 64 64 64 3 99 111]))))
+        "Rejects domains which end mid-label")))
+
+(deftest test-domain-contains?
   (is (dns/domain-contains? nil "example.com")
       "Root domain contains everything")
   (is (dns/domain-contains? "com" "com") "Domain contains itself")
@@ -13,7 +28,7 @@
   (is (not (dns/domain-contains? "example.com" "wwwexample.com"))
       "Domain does not contain purely lexicographic suffix"))
 
-(deftest test-dns-subdomain?
+(deftest test-domain-subdomain?
   (is (dns/domain-subdomain? nil "example.com")
       "Root domains has everything as a subdomain")
   (is (not (dns/domain-subdomain? "com" "com"))

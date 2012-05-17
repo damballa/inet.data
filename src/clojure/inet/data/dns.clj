@@ -14,7 +14,8 @@ may easily find the next longer child of the ancestor.  The primary down-side
 is that this form does make it more difficult to find the immediate parent of a
 given domain."
   (:require [clojure.string :as str])
-  (:use [inet.data.util :only [ffilter ubyte sbyte bytes-hash-code]])
+  (:use [inet.data.util :only [ignore-errors ffilter ubyte sbyte
+                               bytes-hash-code]])
   (:import [clojure.lang IFn ILookup IObj IPersistentMap]
            [inet.data.dns DNSDomainException DNSDomainParser]
            [java.util Arrays]
@@ -86,12 +87,15 @@ case-independent fashion."
   [domain] (DNSDomainParser/isValidHostname (domain-bytes domain)))
 
 (defn- name->bytes
-  "Convert a string domain name into an internal normalized byte form."
-  ^bytes [name]
-  (->> name IDN/toASCII (#(str/split % #"\." -1)) reverse
-       (mapcat #(let [bytes (.getBytes ^String % "US-ASCII")]
-                  (cons (sbyte (count bytes)) bytes)))
-       byte-array))
+  "Convert a string domain name into an internal normalized byte form.  Returns
+an arbitrary invalid result if the name cannot be encoded."
+  ^bytes [^String name]
+  (if-let [name (ignore-errors (IDN/toASCII name))]
+    (->> name (#(str/split % #"\." -1)) reverse
+         (mapcat #(let [bytes (.getBytes ^String % "US-ASCII")]
+                    (cons (sbyte (count bytes)) bytes)))
+         byte-array)
+    (byte-array [(byte -1)])))
 
 (defn- wire->bytes
   "Convert a DNS wire-form domain name into an internal normalized byte form."

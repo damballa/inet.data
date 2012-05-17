@@ -623,7 +623,7 @@ case 5:
     if (cs < ipaddr_first_final)
         return INVALID;
 
-    if (elision >= 0) {
+    if (buffer != null && elision >= 0) {
         int diff = IPV6_BYTE_LEN - nbytes;
         for (int i = elision; i < nbytes; i++) {
             buffer[i + diff] = buffer[i];

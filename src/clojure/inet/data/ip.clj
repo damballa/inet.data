@@ -17,7 +17,7 @@
   "Operations on objects which may be treated as addresses."
   (^:private address?* [addr]
     "Returns whether or not the value represents a valid address.")
-  (^:private address-bytes [addr]
+  (address-bytes [addr]
     "Retrieve the bytes representation of this address.")
   (address-length [addr]
     "The length in bits of this address."))

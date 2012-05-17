@@ -6,6 +6,30 @@
   "Returns the result of evaluating body, or nil if it throws an exception."
   [& body] `(try ~@body (catch java.lang.Exception _# nil)))
 
+;; Copied from clojure/core.clj
+(defmacro assert-args [& pairs]
+  `(do (when-not ~(first pairs)
+         (throw (IllegalArgumentException.
+                 (str (first ~'&form) " requires " ~(second pairs) " in "
+                      ~'*ns* ":" (:line (meta ~'&form))))))
+       ~(let [more (nnext pairs)]
+          (when more
+            (list* `assert-args more)))))
+
+(defmacro doto-let
+  "bindings => binding-form expr
+
+Evaluates expr, and evaluates body with its result bound to the binding-form.
+Returns the result of expr."
+  ([bindings & body]
+     (assert-args
+       (vector? bindings) "a vector for its binding"
+       (= 2 (count bindings)) "exactly 2 forms in binding vector")
+     (let [[bf expr] bindings]
+       `(let [value# ~expr]
+          (let [~bf value#]
+            ~@body value#)))))
+
 (defn ffilter
   "Returns the first item in coll for which (pred item) is true."
   ([pred coll]

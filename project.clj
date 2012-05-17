@@ -8,4 +8,5 @@
   :source-paths ["src/clojure"]
   :java-source-paths ["src/java"]
   :javac-options ["-g"]
-  :warn-on-reflection true)
+  :profiles {:dev {:dependencies [[byteable "0.1.1"]]
+                   :warn-on-reflection true}})

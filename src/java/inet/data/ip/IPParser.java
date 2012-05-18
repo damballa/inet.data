@@ -538,7 +538,7 @@ case 1:
 	case 4:
 // line 45 "src/java/inet/data/ip/IPParser.java.rl"
 	{
-            h16 = (h16 * 16);
+            h16 <<= 4;
             int d = (int) ( addr.charAt(p));
             if      (d <= 0x39) h16 += d - 0x30;
             else if (d <= 0x46) h16 += d - 0x41 + 10;

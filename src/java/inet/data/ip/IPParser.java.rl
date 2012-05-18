@@ -43,7 +43,7 @@ parse(String addr, byte[] buffer) {
 
         action beg_h16 { h16 = 0; }
         action hdigit {
-            h16 = (h16 * 16);
+            h16 <<= 4;
             int d = (int) fc;
             if      (d <= 0x39) h16 += d - 0x30;
             else if (d <= 0x46) h16 += d - 0x41 + 10;

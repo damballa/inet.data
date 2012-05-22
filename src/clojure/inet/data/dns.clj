@@ -15,7 +15,8 @@ is that this form does make it more difficult to find the immediate parent of a
 given domain."
   (:require [clojure.string :as str])
   (:use [inet.data.util :only [ignore-errors ffilter ubyte sbyte
-                               bytes-hash-code]])
+                               bytes-hash-code]]
+        [hier-set.core :only [hier-set-by]])
   (:import [clojure.lang IFn ILookup IObj IPersistentMap]
            [inet.data.dns DNSDomainException DNSDomainParser]
            [java.util Arrays]
@@ -81,6 +82,10 @@ case-independent fashion."
   [parent child]
   (and (< (domain-length parent) (domain-length child))
        (zero? (domain-compare false parent child))))
+
+(defn domain-set
+  "Create a hierarchical set from domains `doms`."
+  [& doms] (apply hier-set-by domain-contains? domain-compare doms))
 
 (defn domain-hostname?
   "Determine if the provided domain is a valid hostname."

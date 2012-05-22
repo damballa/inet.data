@@ -2,7 +2,8 @@
   "Functions for interacting with IP addresses and networks."
   (:require [clojure.string :as str])
   (:use [inet.data.util :only
-         [ignore-errors case-expr ubyte sbyte longest-run bytes-hash-code]])
+         [ignore-errors case-expr ubyte sbyte longest-run bytes-hash-code]]
+        [hier-set.core :only [hier-set-by]])
   (:import [clojure.lang  IFn IObj IPersistentMap ILookup]
            [inet.data.ip IPParser IPAddressException IPNetworkException]
            [java.util Arrays]
@@ -94,6 +95,10 @@ prefix length."
      (let [length (network-length net)]
        (and (<= length (network-length addr))
             (zero? (network-compare* false length net addr))))))
+
+(defn network-set
+  "Create a hierarchical set from networks `nets`."
+  [& nets] (apply hier-set-by network-contains? network-compare nets))
 
 (defn- string-address-ipv4 [^bytes bytes]
   (->> bytes (map ubyte) (str/join ".")))

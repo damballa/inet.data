@@ -62,7 +62,7 @@ case-independent fashion."
   (^long [stable case-fold left right]
      (let [byte-value (if case-fold case-fold-ubyte ubyte),
            ^bytes dom1 (domain-bytes left), ^bytes dom2 (domain-bytes right),
-           len1 (alength dom1), len2 (alength dom2),
+           len1 (domain-length left), len2 (domain-length right),
            length (long (min len1 len2))]
        (loop [i (long 0)]
          (if (>= i length)

@@ -17,6 +17,18 @@
     (is (not (dns/domain? (byte-array (map byte [3 64 64 64 3 99 111]))))
         "Rejects domains which end mid-label")))
 
+(deftest test-domain-compare
+  (testing "Domain comparison"
+    (is (= 0 (dns/domain-compare "example.com" "example.com"))
+        "Identical domains compare equal")
+    (let [dom (dns/domain "example.com")]
+      (is (not= 0 (dns/domain-compare dom (dns/domain-next dom nil)))
+          "Differing domains do not compare as equal")
+      (is (= 0 (dns/domain-compare dom (dns/domain-next dom "com")))
+          "Equal derived domains do compare as equal"))
+    (is (= 0 (dns/domain-compare "example.com" "eXaMpLe.com"))
+        "Case-differing domains compare as equal")))
+
 (deftest test-domain-contains?
   (is (dns/domain-contains? nil "example.com")
       "Root domain contains everything")

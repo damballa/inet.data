@@ -193,11 +193,14 @@ the implied empty root domain as `parent` if not provided."
          (DNSDomain. nil bytes (+ length (ubyte (aget bytes length)) 1))))))
 
 (defn domain-ancestors
-  "Generate a seq of the all the domains for which the provided domain is a
-proper subdomain, starting with the domain's TLD and ending with the domain
-itself."
-  [domain] (->> (iterate #(domain-next domain %) nil) (drop 1)
-                (take-while identity)))
+  "Generate a seq of the all the domains for which the provided domain `child`
+is a proper subdomain, starting with the domain after `parent` and ending with
+the domain itself.  Uses the implied empty root domain as `parent` if not
+provided."
+  ([child] (domain-ancestors child nil))
+  ([child parent]
+     (->> (iterate #(domain-next child %) parent) (drop 1)
+          (take-while identity))))
 
 (extend-type (java.lang.Class/forName "[B")
   DNSDomainConstruction

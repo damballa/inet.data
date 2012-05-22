@@ -122,8 +122,9 @@ prefix length."
   (toString [this] (string-address bytes))
   (hashCode [this] (bytes-hash-code bytes))
   (equals [this other]
-    (and (instance? IPAddress other)
-         (Arrays/equals bytes ^bytes (address-bytes other))))
+    (or (identical? this other)
+        (and (instance? IPAddress other)
+             (Arrays/equals bytes ^bytes (address-bytes other)))))
 
   IObj
   (meta [this] meta)
@@ -147,9 +148,10 @@ prefix length."
   (toString [this] (str (string-address prefix) "/" length))
   (hashCode [this] (bytes-hash-code bytes length))
   (equals [this other]
-    (and (instance? IPNetwork other)
-         (= length (network-length other))
-         (Arrays/equals prefix ^bytes (address-bytes other))))
+    (or (identical? this other)
+        (and (instance? IPNetwork other)
+             (= length (network-length other))
+             (Arrays/equals prefix ^bytes (address-bytes other)))))
 
   IObj
   (meta [this] meta)

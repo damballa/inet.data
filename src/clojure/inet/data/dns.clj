@@ -136,9 +136,10 @@ standard string form."
   (toString [this] (bytes->name bytes 0 length))
   (hashCode [this] (bytes-hash-code bytes 0 length))
   (equals [this other]
-    (and (instance? DNSDomain other)
-         (= length (domain-length other))
-         (zero? (domain-compare true false this other))))
+    (or (identical? this other)
+        (and (instance? DNSDomain other)
+             (= length (domain-length other))
+             (zero? (domain-compare true false this other)))))
 
   IObj
   (meta [this] meta)

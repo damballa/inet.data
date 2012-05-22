@@ -7,7 +7,7 @@
     (is (dns/domain? "www.foobar.com") "Accepts valid string domains")
     (is (dns/domain? "this-is-a-valid-domain-even-though-it-has-a-quite-loooong-label.com")
         "Accepts domains with the maximum label length")
-    (is (not (dns/domain? "this-is-an-invalid-domain-because-it-has-an-overlong-label-by-un.com"))
+    (is (not (dns/domain? "this-is-an-invalid-domain-due-to-having-an-overlong-label-by-one.com"))
         "Rejects domains with overlong labels")
     (is (not (dns/domain? "this-is-an-invalid-domain-because-it-has-an-overlong-label-by-two.com"))
         "Rejects domains with even overlong-er labels"))

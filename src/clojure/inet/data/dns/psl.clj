@@ -23,6 +23,7 @@
             (condp prefix? entry
               "*." (convert entry 2 :wildcard)
               "!"  (convert entry 1 :exception)
+              "."  (convert entry 1 :normal)
                    (convert entry 0 :normal)))
           (step [[prefixes rules] entry]
             (let [[prefix rule] (parse entry)]

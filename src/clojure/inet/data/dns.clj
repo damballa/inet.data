@@ -228,3 +228,9 @@ provided."
   (domain?* [this] true)
   (domain-bytes [this] (domain-bytes root-domain))
   (domain-length [this] 0))
+
+(defmethod clojure.core/print-method DNSDomain
+  ([^DNSDomain dom ^java.io.Writer w]
+     (.write w "#dns/domain \"")
+     (.write w (str dom))
+     (.write w "\"")))

@@ -98,7 +98,8 @@ prefix length."
 
 (defn network-set
   "Create a hierarchical set from networks `nets`."
-  [& nets] (apply hier-set-by network-contains? network-compare nets))
+  [& nets] (apply hier-set-by network-contains? network-compare
+                  (map network nets)))
 
 (defn- string-address-ipv4 [^bytes bytes]
   (->> bytes (map ubyte) (str/join ".")))

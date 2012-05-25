@@ -85,7 +85,8 @@ case-independent fashion."
 
 (defn domain-set
   "Create a hierarchical set from domains `doms`."
-  [& doms] (apply hier-set-by domain-contains? domain-compare doms))
+  [& doms] (apply hier-set-by domain-contains? domain-compare
+                  (map domain doms)))
 
 (defn domain-hostname?
   "Determine if the provided domain is a valid hostname."

@@ -1,10 +1,43 @@
 # inet.data
 
-FIXME: write description
+Inet.data is a library for modeling various Internet-related conceptual
+entities as *data*, supporting applications with are *about* the modeled
+entities versus *interfacing* with them.
+
+## Installation
+
+Inet.data is available on Clojars.  Add this `:dependency` to your Leiningen
+`project.clj`:
+
+```clj
+[inet.data "0.1.0"]
+```
 
 ## Usage
 
-FIXME: write
+Currently inet.data includes support for IP addresses and networks and for DNS
+domain names.
+
+### inet.data.ip
+
+The `inet.data.ip` namespace defines types for addresses and networks.  All
+public functions work in terms of a protocol which is also implemented for
+strings, byte arrays, and `java.net.InetAddress`.
+
+```clj
+(require '[inet.data.ip :as ip])
+
+(ip/network-contains? "192.168.1.0/24" "192.168.1.1") ;;=> true
+
+(ip/address? "600d::") ;;=> true
+(ip/address? "::bad::") ;;=> false
+
+(let [rfc1918 (ip/network-set "10.0.0.0/8" "172.16.0.0/12" "192.168.0.0/16")]
+  (get rfc1918 "10.31.33.7") ;;=> (#ip/network "10.0.0.0/8")
+  (get rfc1918 "8.8.8.8") ;;=> nil
+  )
+```
+
 
 ## License
 

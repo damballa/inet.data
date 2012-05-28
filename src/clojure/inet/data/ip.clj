@@ -147,7 +147,7 @@ prefix length."
 (deftype IPNetwork [^IPersistentMap meta, ^bytes prefix, ^long length]
   Object
   (toString [this] (str (string-address prefix) "/" length))
-  (hashCode [this] (bytes-hash-code bytes length))
+  (hashCode [this] (bytes-hash-code prefix length))
   (equals [this other]
     (or (identical? this other)
         (and (instance? IPNetwork other)

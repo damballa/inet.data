@@ -55,3 +55,10 @@
   (testing "Network doesn't contain address"
     (is (not (ip/network-contains? "192.168.0.0/16" "8.8.8.8")))
     (is (not (ip/network-contains? "192.168.0.0/17" "192.168.128.1")))))
+
+(deftest test-network-set
+  (testing "Sets of networks"
+    (let [networks (->> (range 0 256) (map #(ip/network (str "10.0.0." %)))
+                        (apply ip/network-set))]
+      (is (contains? networks "10.0.0.1"))
+      (is (not (contains? networks "10.0.1.1"))))))

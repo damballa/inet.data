@@ -39,7 +39,8 @@
 
 (defn lookup
   "Determine the E2LD of `domain` as specified by the PSL loaded in `psl`.
-Uses the default PSL loaded from `*default-psl-url*` if `psl` is not provided."
+Uses the default PSL loaded from `*default-psl-url*` if `psl` is not provided.
+Returns `nil` if the domain does not match the provided PSL."
   ([dom] (lookup (memo-load *default-psl-url*) dom))
   ([psl dom]
      (let [dom (dns/domain dom), [prefixes rules] psl]

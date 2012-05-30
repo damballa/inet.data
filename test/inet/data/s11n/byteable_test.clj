@@ -32,4 +32,6 @@
 (deftest test-dns-domain
   (testing "DNSDomain byteable de/s11n round-tripping"
     (let [dom (dns/domain "www.google.com")]
+      (is (= dom (round-trip dom))))
+    (let [dom (dns/domain-next (dns/domain "www.google.com"))]
       (is (= dom (round-trip dom))))))

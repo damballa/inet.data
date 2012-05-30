@@ -34,7 +34,7 @@
     (dns/domain (doto-let [bytes (-> input .readByte ubyte byte-array)]
                   (.readFully input bytes))))
   (write [dom output]
-    (let [^bytes bytes (dns/domain-bytes dom)]
+    (let [^bytes bytes (dns/domain-bytes dom), len (dns/domain-length dom)]
       (doto output
-        (.writeByte (-> bytes alength sbyte))
-        (.write     bytes)))))
+        (.writeByte len)
+        (.write     bytes 0 len)))))

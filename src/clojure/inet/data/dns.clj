@@ -86,8 +86,11 @@ case-independent fashion."
                   (map domain doms)))
 
 (defn domain-hostname?
-  "Determine if the provided domain is a valid hostname."
-  [domain] (DNSDomainParser/isValidHostname (domain-bytes domain)))
+  "Determine if the provided domain is a valid hostname.  Allow underscores in
+\"valid\" hostnames if `underscores` is true (default false)."
+  ([domain] (domain-hostname? domain false))
+  ([domain underscores]
+     (DNSDomainParser/isValidHostname (domain-bytes domain) underscores)))
 
 (defn- name->bytes
   "Convert a string domain name into an internal normalized byte form.  Returns

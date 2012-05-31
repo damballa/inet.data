@@ -49,7 +49,7 @@ isValid(byte[] data) {
 %% write data;
 
 public static boolean
-isValidHostname(byte[] data) {
+isValidHostname(byte[] data, boolean underscores) {
     if (data.length > MAX_DOMAIN_LENGTH)
         return false;
 
@@ -64,10 +64,11 @@ isValidHostname(byte[] data) {
         action beg_label { length = ((int) fc) & 0xff; }
         action in_label { (length-- > 0) }
         action not_in_label { (length <= 0) }
+        action underscores { underscores }
 
         length = 1..63 $beg_label;
         let_dig = alnum when in_label;
-        hyp = "-" when in_label;
+        hyp = ( "-" | "_" when underscores ) when in_label;
         let_dig_hyp = let_dig | hyp;
         ldh_str = let_dig_hyp+;
         content = let_dig (ldh_str? let_dig)?;

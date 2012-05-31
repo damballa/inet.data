@@ -66,7 +66,7 @@ pair of the starting index and length on success and nil on failure."
 (defn ubyte
   "Unsigned number represented by a byte value."
   {:inline (fn [x] `(bit-and 0xff (long ~x)))}
-  (^long [x] (bit-and 0xff x)))
+  (^long [^long x] (bit-and 0xff x)))
 
 (defn sbyte
   "Signed byte representation of an unsigned integral value."

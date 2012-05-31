@@ -31,9 +31,9 @@ given domain."
   "Operations on objects which may be treated as domains."
   (^:private domain?* [dom]
     "Returns whether or not the value represents a valid domain.")
-  (domain-bytes [dom]
+  (^bytes domain-bytes [dom]
     "Retrieve the internal normalized byte form of the domain.")
-  (domain-length [dom]
+  (^long domain-length [dom]
     "The length in bytes of this domain."))
 
 (defn domain?
@@ -41,11 +41,16 @@ given domain."
   [dom] (and (satisfies? DNSDomainOperations dom)
              (boolean (domain?* dom))))
 
+(def ^:private ^:constant long-char-a (long (int \A)))
+(def ^:private ^:constant long-char-z (long (int \Z)))
+
 (defn- case-fold-ubyte
   "Interpret byte `b` as unsigned integral value; if in the range of the ASCII
 code-points for uppercase letters, fold to the code-point for the corresponding
 lowercase letter."
-  [b] (let [b (ubyte b)] (if (<= (int \A) b (int \Z)) (bit-or 0x20 b) b)))
+  ^long [^long b]
+  (let [b (ubyte b)]
+    (if (<= long-char-a b long-char-z) (bit-or 0x20 b) b)))
 
 (defn domain-compare
   "Compare two domains, with the same result semantics as `compare`.  When
@@ -64,7 +69,8 @@ case-independent fashion."
        (loop [i (long 0)]
          (if (>= i length)
            (if-not stable 0 (- len1 len2))
-           (let [b1 (byte-value (aget dom1 i)), b2 (byte-value (aget dom2 i))]
+           (let [b1 (long (byte-value (long (aget dom1 i))))
+                 b2 (long (byte-value (long (aget dom2 i))))]
              (if (not= b1 b2) (- b1 b2) (recur (inc i)))))))))
 
 (defn domain-contains?
@@ -185,8 +191,7 @@ standard string form."
 immediate child domain of `parent` which is either identical to `child` or also
 a parent domain of `child`.  Returns `nil` if there is no such domain.  Uses
 the implied empty root domain as `parent` if not provided."
-  ([child]
-     (domain-next child nil))
+  ([child] (domain-next child nil))
   ([child parent]
      (let [^bytes bytes (domain-bytes child), length (domain-length parent)]
        (when (< length (domain-length child))

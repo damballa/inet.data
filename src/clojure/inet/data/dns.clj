@@ -18,7 +18,7 @@ given domain."
                                bytes-hash-code]]
         [hier-set.core :only [hier-set-by]])
   (:import [clojure.lang IFn ILookup IObj IPersistentMap]
-           [inet.data.dns DNSDomainException DNSDomainParser]
+           [inet.data.dns DNSDomainParser]
            [java.util Arrays]
            [java.net IDN]))
 
@@ -40,9 +40,6 @@ given domain."
   "Determine if dom is a value which represents a DNS domain."
   [dom] (and (satisfies? DNSDomainOperations dom)
              (boolean (domain?* dom))))
-
-(defn- domain-error [msg & args]
-  (throw (DNSDomainException. ^String (apply format msg args))))
 
 (defn- case-fold-ubyte
   "Interpret byte `b` as unsigned integral value; if in the range of the ASCII
@@ -177,9 +174,8 @@ standard string form."
 (defn- domain*
   "Private bytes->domain factory."
   [orig ^bytes bytes]
-  (if (domain?* bytes)
-    (DNSDomain. nil bytes (alength bytes))
-    (domain-error "%s: invalid domain" (str orig))))
+  (when (domain?* bytes)
+    (DNSDomain. nil bytes (alength bytes))))
 
 (defn domain-next
   "For the domain `child` which is a subdomain of domain `parent`, return the

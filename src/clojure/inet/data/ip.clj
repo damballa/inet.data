@@ -5,7 +5,7 @@
          [ignore-errors case-expr ubyte sbyte longest-run bytes-hash-code]]
         [hier-set.core :only [hier-set-by]])
   (:import [clojure.lang  IFn IObj IPersistentMap ILookup]
-           [inet.data.ip IPParser IPAddressException IPNetworkException]
+           [inet.data.ip IPParser]
            [java.util Arrays]
            [java.net InetAddress]))
 
@@ -52,12 +52,6 @@
 (defn inet-address
   "Generate a java.net.InetAddress from the provided value."
   [addr] (InetAddress/getByAddress (address-bytes addr)))
-
-(defn- address-error [msg & args]
-  (throw (IPAddressException. ^String (apply format msg args))))
-
-(defn- network-error [msg & args]
-  (throw (IPNetworkException. ^String (apply format msg args))))
 
 (defn- network-compare*
   "Private version of network-compare.  The value of `length` must be the
@@ -185,15 +179,13 @@ prefix length."
 
 (defn- address*
   [orig ^bytes bytes]
-  (if (address?* bytes)
-    (IPAddress. nil bytes)
-    (address-error "%s: invalid address" (str orig))))
+  (when (address?* bytes)
+    (IPAddress. nil bytes)))
 
 (defn- network*
   [orig ^bytes bytes ^long length]
-  (if (network?* bytes length)
-    (IPNetwork. nil bytes length)
-    (network-error "%s/%d: invalid network" (str orig) length)))
+  (when (network?* bytes length)
+    (IPNetwork. nil bytes length)))
 
 (extend-type IPAddress
   IPAddressConstruction

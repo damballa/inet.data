@@ -93,7 +93,7 @@ case-independent fashion."
 
 (defn domain-hostname?
   "Determine if the provided domain is a valid hostname.  Allow underscores in
-\"valid\" hostnames if `underscores` is true (default false)."
+hostnames if `underscores` is true (default false)."
   ([domain] (domain-hostname? domain false))
   ([domain underscores]
      (DNSDomainParser/isValidHostname (domain-bytes domain) underscores)))

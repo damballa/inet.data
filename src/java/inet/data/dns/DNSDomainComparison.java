@@ -7,6 +7,12 @@ private static final int charZ = (int)'Z';
 
 public static int
 domainCompare(byte[] left, long leftLen, byte[] right, long rightLen) {
+    return domainCompare(true, left, leftLen, right, rightLen);
+}
+
+public static int
+domainCompare(boolean stable, byte[] left, long leftLen,
+              byte[] right, long rightLen) {
     int length = leftLen < rightLen ? (int)leftLen : (int)rightLen;
     for (int i = 0; i < length; ++i) {
         int b1 = (int)left[i] & 0xff;
@@ -16,15 +22,13 @@ domainCompare(byte[] left, long leftLen, byte[] right, long rightLen) {
         if (b1 != b2)
             return b1 - b2;
     }
-    return 0;
+    return stable ? (int)(leftLen - rightLen) : 0;
 }
 
 public static boolean
 domainEquals(byte[] left, byte[] right, int length) {
     for (int i = 0; i < length; ++i) {
-        int b1 = (int)left[i] & 0xff;
-        int b2 = (int)right[i] & 0xff;
-        if (b1 != b2)
+        if (left[i] != right[i])
             return false;
     }
     return true;

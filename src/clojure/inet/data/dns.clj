@@ -50,11 +50,8 @@ comparison always occurs in a case-independent fashion."
   (^long [left right] (domain-compare true left right))
   (^long [stable left right]
      (let [bytes1 (domain-bytes left), len1 (domain-length left)
-           bytes2 (domain-bytes right), len2 (domain-length right)
-           diff (DNSDomainComparison/domainCompare bytes1 len1 bytes2 len2)]
-       (if (zero? diff)
-         (if stable (- len1 len2) 0)
-         diff))))
+           bytes2 (domain-bytes right), len2 (domain-length right)]
+       (DNSDomainComparison/domainCompare stable bytes1 len1 bytes2 len2))))
 
 (defn domain-contains?
   "Determine if the domain `child` is a subdomain of or identical to the domain

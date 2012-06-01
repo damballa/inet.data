@@ -11,7 +11,8 @@ domainCompare(byte[] left, long leftLen, byte[] right, long rightLen) {
 }
 
 public static int
-domainCompare(boolean stable, byte[] left, long leftLen,
+domainCompare(boolean stable,
+              byte[] left, long leftLen,
               byte[] right, long rightLen) {
     int length = leftLen < rightLen ? (int)leftLen : (int)rightLen;
     for (int i = 0; i < length; ++i) {

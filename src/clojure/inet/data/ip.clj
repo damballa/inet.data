@@ -5,7 +5,7 @@
          [ignore-errors case-expr ubyte sbyte longest-run bytes-hash-code]]
         [hier-set.core :only [hier-set-by]])
   (:import [clojure.lang  IFn IObj IPersistentMap ILookup]
-           [inet.data.ip IPParser]
+           [inet.data.ip IPParser IPNetworkComparison]
            [java.util Arrays]
            [java.net InetAddress]))
 
@@ -53,25 +53,6 @@
   "Generate a java.net.InetAddress from the provided value."
   [addr] (InetAddress/getByAddress (address-bytes addr)))
 
-(defn- network-compare*
-  "Private version of network-compare.  The value of `length` must be the
-minimum common prefix length of the two networks."
-  ^long [stable ^long length left right]
-  (let [^bytes prefix1 (address-bytes left),
-        ^bytes prefix2 (address-bytes right),
-        len1 (alength prefix1), len2 (alength prefix2)]
-    (if (not= len1 len2)
-      (- len1 len2)
-      (loop [i (long 0), rem (long length)]
-        (if-not (pos? rem)
-          (if-not stable 0 (- (network-length left) (network-length right)))
-          (let [mask (if (< 8 rem) 0xff (bit-not (bit-shift-right 0xff rem)))
-                b1 (bit-and mask (ubyte (aget prefix1 i)))
-                b2 (bit-and mask (ubyte (aget prefix2 i)))]
-            (if (not= b1 b2)
-              (- b1 b2)
-              (recur (inc i) (- rem 8)))))))))
-
 (defn network-compare
   "Compare the prefixes of networks `left` and `right`, with the same result
 semantics as `compare`.  When `stable` is true (the default), 0 will only be
@@ -80,15 +61,16 @@ be returned as long as the networks are identical up to their minimum common
 prefix length."
   (^long [left right] (network-compare true left right))
   (^long [stable left right]
-     (let [length (min (network-length left) (network-length right))]
-       (network-compare* stable length left right))))
+     (let [^bytes prefix1 (address-bytes left), plen1 (network-length left)
+           ^bytes prefix2 (address-bytes right), plen2 (network-length right)]
+       (IPNetworkComparison/networkCompare stable prefix1 plen1 prefix2 plen2))))
 
 (defn network-contains?
   "Determine if network `net` contains the address/network `addr`."
   ([net addr]
      (let [length (network-length net)]
        (and (<= length (network-length addr))
-            (zero? (network-compare* false length net addr))))))
+            (zero? (network-compare false net addr))))))
 
 (defn network-set
   "Create a hierarchical set from networks `nets`."
@@ -127,7 +109,9 @@ prefix length."
 
   Comparable
   (compareTo [this other]
-    (network-compare true this other))
+    (let [^bytes prefix2 (address-bytes other),
+          plen2 (long (network-length other))]
+      (IPNetworkComparison/networkCompare bytes (alength bytes) prefix2 plen2)))
 
   IPAddressOperations
   (address?* [this] true)
@@ -154,7 +138,9 @@ prefix length."
 
   Comparable
   (compareTo [this other]
-    (network-compare true this other))
+    (let [^bytes prefix2 (address-bytes other),
+          plen2 (long (network-length other))]
+      (IPNetworkComparison/networkCompare prefix length prefix2 plen2)))
 
   ILookup
   (valAt [this key]

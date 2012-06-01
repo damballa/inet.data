@@ -18,7 +18,7 @@ given domain."
                                bytes-hash-code]]
         [hier-set.core :only [hier-set-by]])
   (:import [clojure.lang IFn ILookup IObj IPersistentMap]
-           [inet.data.dns DNSDomainParser]
+           [inet.data.dns DNSDomainParser DNSDomainComparison]
            [java.util Arrays]
            [java.net IDN]))
 
@@ -31,9 +31,9 @@ given domain."
   "Operations on objects which may be treated as domains."
   (^:private domain?* [dom]
     "Returns whether or not the value represents a valid domain.")
-  (^bytes domain-bytes [dom]
+  (domain-bytes [dom]
     "Retrieve the internal normalized byte form of the domain.")
-  (^long domain-length [dom]
+  (domain-length [dom]
     "The length in bytes of this domain."))
 
 (defn domain?
@@ -41,37 +41,20 @@ given domain."
   [dom] (and (satisfies? DNSDomainOperations dom)
              (boolean (domain?* dom))))
 
-(def ^:private ^:constant long-char-a (long (int \A)))
-(def ^:private ^:constant long-char-z (long (int \Z)))
-
-(defn- case-fold-ubyte
-  "Interpret byte `b` as unsigned integral value; if in the range of the ASCII
-code-points for uppercase letters, fold to the code-point for the corresponding
-lowercase letter."
-  ^long [^long b]
-  (let [b (ubyte b)]
-    (if (<= long-char-a b long-char-z) (bit-or 0x20 b) b)))
-
 (defn domain-compare
   "Compare two domains, with the same result semantics as `compare`.  When
 `stable` is true (the default), 0 will only be returned when the domains are
 value-identical.  When `stable` is false, 0 will be returned as long as the
-networks are identical up to their minimum common full-label length.  When
-`case-fold` is true (the default), domains will be compared in a
-case-independent fashion."
-  (^long [left right] (domain-compare true true left right))
-  (^long [stable left right] (domain-compare stable true left right))
-  (^long [stable case-fold left right]
-     (let [byte-value (if case-fold case-fold-ubyte ubyte),
-           ^bytes dom1 (domain-bytes left), ^bytes dom2 (domain-bytes right),
-           len1 (domain-length left), len2 (domain-length right),
-           length (long (min len1 len2))]
-       (loop [i (long 0)]
-         (if (>= i length)
-           (if-not stable 0 (- len1 len2))
-           (let [b1 (long (byte-value (long (aget dom1 i))))
-                 b2 (long (byte-value (long (aget dom2 i))))]
-             (if (not= b1 b2) (- b1 b2) (recur (inc i)))))))))
+networks are identical up to their minimum common full-label length.  Domain
+comparison always occurs in a case-independent fashion."
+  (^long [left right] (domain-compare true left right))
+  (^long [stable left right]
+     (let [bytes1 (domain-bytes left), len1 (domain-length left)
+           bytes2 (domain-bytes right), len2 (domain-length right)
+           diff (DNSDomainComparison/domainCompare bytes1 len1 bytes2 len2)]
+       (if (zero? diff)
+         (if stable (- len1 len2) 0)
+         diff))))
 
 (defn domain-contains?
   "Determine if the domain `child` is a subdomain of or identical to the domain
@@ -146,7 +129,8 @@ standard string form."
     (or (identical? this other)
         (and (instance? DNSDomain other)
              (= length (domain-length other))
-             (zero? (domain-compare true false this other)))))
+             (DNSDomainComparison/domainEquals
+              bytes (domain-bytes other) length))))
 
   IObj
   (meta [this] meta)
@@ -154,7 +138,9 @@ standard string form."
 
   Comparable
   (compareTo [this other]
-    (domain-compare true this other))
+    (let [^bytes obytes (domain-bytes other),
+          olength (long (domain-length other))]
+      (DNSDomainComparison/domainCompare bytes length obytes olength)))
 
   ILookup
   (valAt [this key]

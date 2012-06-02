@@ -4,6 +4,12 @@
             [clojure.java.io :as io])
   (:use [clojure.test]))
 
+(defn use-local-psl
+  [f] (let [psl-url (io/resource "effective_tld_names.dat")]
+        (binding [psl/*default-psl-url* psl-url] (f))))
+
+(use-fixtures :once use-local-psl)
+
 (deftest test-psl
   (testing "Tests from http://publicsuffix.org/list/test.txt"
     (letfn [(check-psl [dom exp]

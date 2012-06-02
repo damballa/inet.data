@@ -48,6 +48,19 @@
           (is (= "fe:11::/32" (-> addr (ip/network 32) str))
               (format "From %s with explicit prefix-length." src)))))))
 
+(deftest test-compare
+  (testing "Identical addresses compare as identical"
+    (is (zero? (ip/network-compare "8.8.8.8" "8.8.8.8")))
+    (is (zero? (compare (ip/address "8.8.8.8") (ip/address "8.8.8.8")))))
+  (testing "Identical networks compare as identical"
+    (is (zero? (ip/network-compare "8.8.8.0/28" "8.8.8.0/28")))
+    (is (zero? (compare (ip/network "8.8.8.0/28") (ip/network "8.8.8.0/28")))))
+  (testing "Differing addresses compare in proper order"
+    (is (neg? (ip/network-compare "8.8.8.7" "8.8.8.8")))
+    (is (pos? (ip/network-compare "8.8.8.7" "7.8.8.8")))
+    (is (neg? (compare (ip/address "8.8.8.7") (ip/address "8.8.8.8"))))
+    (is (pos? (compare (ip/address "8.8.8.7") (ip/address "7.8.8.8"))))))
+
 (deftest test-network-contains
   (testing "Network does contain address"
     (is (ip/network-contains? "192.168.0.0/16" "192.168.13.37"))

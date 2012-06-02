@@ -109,9 +109,10 @@ prefix length."
 
   Comparable
   (compareTo [this other]
-    (let [^bytes prefix2 (address-bytes other),
+    (let [plen1 (long (address-length bytes))
+          ^bytes prefix2 (address-bytes other),
           plen2 (long (network-length other))]
-      (IPNetworkComparison/networkCompare bytes (alength bytes) prefix2 plen2)))
+      (IPNetworkComparison/networkCompare bytes plen1 prefix2 plen2)))
 
   IPAddressOperations
   (address?* [this] true)

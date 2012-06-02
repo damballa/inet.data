@@ -17,17 +17,35 @@
     (is (not (dns/domain? (byte-array (map byte [3 64 64 64 3 99 111]))))
         "Rejects domains which end mid-label")))
 
+(deftest test-domain-roundtrip
+  (testing "Round-tripping"
+    (is (= "www.example.com" (-> "www.example.com" dns/domain str))
+        "Fully ASCII domain names are identical")
+    (is (= "www.ExaMple.com" (-> "www.ExaMple.com" dns/domain str))
+        "Mixed-case ASCII domain names are identical")
+    (is (= "www.xn--exmple-xta.com" (-> "www.exâmple.com" dns/domain str))
+        "IDNs are left Punycode-encoded")
+    (is (= "www.exâmple.com" (-> "www.exâmple.com" dns/domain dns/idn-str))
+        "Explicit IDN string form decodes Punycode")))
+
 (deftest test-domain-compare
   (testing "Domain comparison"
-    (is (= 0 (dns/domain-compare "example.com" "example.com"))
-        "Identical domains compare equal")
+    (testing "Identical domains compare equal"
+      (is (= 0 (dns/domain-compare "example.com" "example.com")))
+      (is (= 0 (compare (dns/domain "example.com")
+                        (dns/domain "example.com")))))
     (let [dom (dns/domain "example.com")]
       (is (not= 0 (dns/domain-compare dom (dns/domain-next dom nil)))
           "Differing domains do not compare as equal")
       (is (= 0 (dns/domain-compare dom (dns/domain-next dom "com")))
           "Equal derived domains do compare as equal"))
-    (is (= 0 (dns/domain-compare "example.com" "eXaMpLe.com"))
-        "Case-differing domains compare as equal")))
+    (testing "Case sensitivity"
+      (testing "Case-differing domains compare as equal"
+        (is (= 0 (dns/domain-compare "example.com" "eXaMpLe.com")))
+        (is (= 0 (compare (dns/domain "example.com")
+                          (dns/domain "eXaMpLe.com")))))
+      (is (not= (dns/domain "example.com") (dns/domain "eXaMpLe.com"))
+          "Case-differing domains are not equal"))))
 
 (deftest test-domain-contains?
   (is (dns/domain-contains? nil "example.com")

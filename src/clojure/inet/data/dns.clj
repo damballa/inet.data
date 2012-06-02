@@ -114,9 +114,13 @@ standard string form."
           (ffilter (comp empty? second)) first
           (#(if (empty? (first %)) (reverse %) %))
           (map #(String. (byte-array %) "US-ASCII"))
-          (str/join ".") IDN/toUnicode))
+          (str/join ".")))
   ([bytes ^long offset ^long length]
      (bytes->name (->> bytes (drop offset) (take length)))))
+
+(defn idn-str
+  "Convert `dom` to IDN string form, interpreting Punycode."
+  [dom] (-> dom domain-bytes bytes->name IDN/toUnicode))
 
 (deftype DNSDomain [^IPersistentMap meta, ^bytes bytes, ^long length]
   Object

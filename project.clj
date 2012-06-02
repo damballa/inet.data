@@ -11,6 +11,6 @@
   :ragel-source-paths ["src/ragel"]
   :javac-options ["-g"]
   :prep-tasks [ragel javac]
+  :warn-on-reflection true
   :profiles {:dev {:dependencies [[byteable "0.2.0"]
-                                  [criterium "0.2.1"]]
-                   :warn-on-reflection true}})
+                                  [criterium "0.2.1"]]}})

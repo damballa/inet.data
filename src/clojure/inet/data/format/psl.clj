@@ -1,4 +1,4 @@
-(ns inet.data.dns.psl
+(ns inet.data.format.psl
   "Functions for interfacing with Mozilla Public Suffix List format files."
   (:refer-clojure :exclude [load])
   (:require [clojure.string :as str]

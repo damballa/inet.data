@@ -1,5 +1,5 @@
-(ns inet.data.dns.psl-test
-  (:require [inet.data.dns.psl :as psl]
+(ns inet.data.format.psl-test
+  (:require [inet.data.format.psl :as psl]
             [inet.data.dns :as dns]
             [clojure.java.io :as io])
   (:use [clojure.test]))

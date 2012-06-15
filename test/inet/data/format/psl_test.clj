@@ -11,9 +11,9 @@
 (use-fixtures :once use-local-psl)
 
 (deftest test-psl
-  (testing "Tests from http://publicsuffix.org/list/test.txt"
-    (letfn [(check-psl [dom exp]
-              (zero? (dns/domain-compare exp (psl/lookup dom))))]
+  (letfn [(check-psl [dom exp]
+            (zero? (dns/domain-compare exp (psl/lookup dom))))]
+    (testing "Tests from http://publicsuffix.org/list/test.txt"
       (testing "NULL input"
         (is (check-psl nil nil)))
       (testing "Mixed case"
@@ -76,4 +76,11 @@
         (is (check-psl "www.test.ak.us" "test.ak.us"))
         (is (check-psl "k12.ak.us" nil))
         (is (check-psl "test.k12.ak.us" "test.k12.ak.us"))
-        (is (check-psl "www.test.k12.ak.us" "test.k12.ak.us"))))))
+        (is (check-psl "www.test.k12.ak.us" "test.k12.ak.us"))))
+    (testing "Additional tests"
+      (testing "Dyndns ETLD within gTLD"
+        (is (check-psl "org" nil))
+        (is (check-psl "dyndns.org" "dyndns.org"))
+        (is (check-psl "example.dyndns.org" "example.dyndns.org"))))))
+
+

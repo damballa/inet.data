@@ -10,7 +10,7 @@ Inet.data is available on Clojars.  Add this `:dependency` to your Leiningen
 `project.clj`:
 
 ```clj
-[inet.data "0.3.2"]
+[inet.data "0.3.3"]
 ```
 
 ## Usage

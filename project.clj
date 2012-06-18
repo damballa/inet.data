@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.4.0"]
-                 [hier-set "1.1.1"]]
+                 [hier-set "1.1.2"]]
   :plugins [[lein-ragel "0.1.0"]]
   :source-paths ["src/clojure"]
   :java-source-paths ["src/java" "target/ragel"]

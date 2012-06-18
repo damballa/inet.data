@@ -13,7 +13,7 @@ isValid(byte[] data) {
     if (data.length > MAX_DOMAIN_LENGTH)
         return false;
 
-    int length = 0;
+    int lablen = 0;
 
     int cs = 0;
     int p = 0;
@@ -21,14 +21,14 @@ isValid(byte[] data) {
     int eof = pe;
 
     %%{
-        action beg_label { length = ((int) fc) & 0xff; }
-        action in_label { (length-- > 0) }
-        action not_in_label { (length <= 0) }
+        action beg_label { lablen = ((int) fc) & 0xff; }
+        action in_label { (lablen-- > 0) }
+        action not_in_label { (lablen <= 0) }
 
-        length = 1..63 $beg_label;
+        lablen = 1..63 $beg_label;
         content = ( any when in_label )+;
         terminal = '' when not_in_label;
-        label = length content <: terminal;
+        label = lablen content <: terminal;
         domain = label+;
 
         main := domain;
@@ -39,7 +39,7 @@ isValid(byte[] data) {
     %% write init;
     %% write exec;
 
-    if (cs < domain_first_final || length > 0)
+    if (cs < domain_first_final || lablen > 0)
         return false;
     return true;
 }
@@ -49,31 +49,31 @@ isValid(byte[] data) {
 %% write data;
 
 public static boolean
-isValidHostname(byte[] data, boolean underscores) {
-    if (data.length > MAX_DOMAIN_LENGTH)
+isValidHostname(byte[] data, int length, boolean underscores) {
+    if (length > MAX_DOMAIN_LENGTH)
         return false;
 
-    int length = 0;
+    int lablen = 0;
 
     int cs = 0;
     int p = 0;
-    int pe = data.length;
+    int pe = length;
     int eof = pe;
 
     %%{
-        action beg_label { length = ((int) fc) & 0xff; }
-        action in_label { (length-- > 0) }
-        action not_in_label { (length <= 0) }
+        action beg_label { lablen = ((int) fc) & 0xff; }
+        action in_label { (lablen-- > 0) }
+        action not_in_label { (lablen <= 0) }
         action underscores { underscores }
 
-        length = 1..63 $beg_label;
+        lablen = 1..63 $beg_label;
         let_dig = alnum when in_label;
         hyp = ( "-" | "_" when underscores ) when in_label;
         let_dig_hyp = let_dig | hyp;
         ldh_str = let_dig_hyp+;
         content = let_dig (ldh_str? let_dig)?;
         terminal = '' when not_in_label;
-        label = length content <: terminal;
+        label = lablen content <: terminal;
         domain = label+;
 
         main := domain;
@@ -84,7 +84,7 @@ isValidHostname(byte[] data, boolean underscores) {
     %% write init;
     %% write exec;
 
-    if (cs < domain_first_final || length > 0)
+    if (cs < domain_first_final || lablen > 0)
         return false;
     return true;
 }

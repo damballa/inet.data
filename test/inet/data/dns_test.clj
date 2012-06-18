@@ -72,3 +72,6 @@
   (is (not (dns/domain-subdomain? "example.com" "wwwexample.com"))
       "Domain does not have purely lexicographic suffixes as subdomains"))
 
+(deftest test-domain-utility
+  (is (= '("www" "example" "com") (dns/domain-labels "www.example.com"))
+      "Turn domain into sequence of labels."))

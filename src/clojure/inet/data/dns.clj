@@ -32,9 +32,15 @@ given domain."
   (^:private domain?* [dom]
     "Returns whether or not the value represents a valid domain.")
   (domain-bytes [dom]
-    "Retrieve the internal normalized byte form of the domain.")
+    "Retrieve the internal normalized byte form of the domain as a byte array.
+Only the first `domain-length` bytes will actually contain the domain.")
   (domain-length [dom]
     "The length in bytes of this domain."))
+
+(defn domain-byte-seq
+  "Return the internal normalized byte form of of the domain `dom` as a
+sequence of bytes."
+  [dom] (take (domain-length dom) (domain-bytes dom)))
 
 (defn domain?
   "Determine if dom is a value which represents a DNS domain."
@@ -72,11 +78,12 @@ comparison always occurs in a case-independent fashion."
                   (map domain doms)))
 
 (defn domain-hostname?
-  "Determine if the provided domain is a valid hostname.  Allow underscores in
-hostnames if `underscores` is true (default false)."
-  ([domain] (domain-hostname? domain false))
-  ([domain underscores]
-     (DNSDomainParser/isValidHostname (domain-bytes domain) underscores)))
+  "Determine if the provided domain `dom` is a valid hostname.  Allow
+underscores in hostnames if `underscores` is true (default false)."
+  ([dom] (domain-hostname? dom false))
+  ([dom underscores]
+     (DNSDomainParser/isValidHostname
+      (domain-bytes dom) (domain-length dom) underscores)))
 
 (defn- name->bytes
   "Convert a string domain name into an internal normalized byte form.  Returns
@@ -102,29 +109,33 @@ an arbitrary invalid result if the name cannot be encoded."
   (^bytes [wire ^long offset ^long length]
      (->> wire (drop offset) (take length) wire->bytes)))
 
+(defn- bytes->labels
+  "Convert the internal normalized byte form of the domain in bytes into a
+sequence of label strings."
+  [bytes] (->> [nil bytes]
+               (iterate (fn [[state data]]
+                          (let [n (inc (first data))]
+                            [(conj state (drop 1 (take n data)))
+                             (drop n data)])))
+               (ffilter (comp empty? second)) first
+               (#(if (empty? (first %)) (reverse %) %))
+               (map #(String. (byte-array %) "US-ASCII"))))
+
 (defn- bytes->name
   "Convert the internal normalized byte form of the domain in bytes into its
 standard string form."
-  ([bytes]
-     (->> [nil bytes]
-          (iterate (fn [[state data]]
-                     (let [n (inc (first data))]
-                       [(conj state (drop 1 (take n data)))
-                        (drop n data)])))
-          (ffilter (comp empty? second)) first
-          (#(if (empty? (first %)) (reverse %) %))
-          (map #(String. (byte-array %) "US-ASCII"))
-          (str/join ".")))
-  ([bytes ^long offset ^long length]
-     (bytes->name (->> bytes (drop offset) (take length)))))
+  [bytes] (str/join "." (bytes->labels bytes)))
+
+(defn domain-labels
+  [dom] (bytes->labels (domain-byte-seq dom)))
 
 (defn idn-str
   "Convert `dom` to IDN string form, interpreting Punycode."
-  [dom] (-> dom domain-bytes bytes->name IDN/toUnicode))
+  [dom] (-> dom domain-byte-seq bytes->name IDN/toUnicode))
 
 (deftype DNSDomain [^IPersistentMap meta, ^bytes bytes, ^long length]
   Object
-  (toString [this] (bytes->name bytes 0 length))
+  (toString [this] (bytes->name (take length bytes)))
   (hashCode [this] (bytes-hash-code bytes 0 length))
   (equals [this other]
     (or (identical? this other)

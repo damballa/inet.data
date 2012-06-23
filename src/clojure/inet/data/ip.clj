@@ -53,6 +53,20 @@
   "Generate a java.net.InetAddress from the provided value."
   [addr] (InetAddress/getByAddress (address-bytes addr)))
 
+(defn network-trunc
+  "Create a network with a prefix consisting of the first `length` bits of
+`prefix` and a length of `length`."
+  [prefix length]
+  (let [prefix (byte-array (address-bytes prefix))]
+    (loop [zbits (long (- (address-length prefix) length)),
+           i (->> prefix alength dec long)]
+      (cond (>= zbits 8) (do (aset prefix i (byte 0))
+                             (recur (- zbits 8) (dec i)))
+            (pos? zbits) (->> (bit-shift-left -1 zbits)
+                              (bit-and (aget prefix i)) byte
+                              (aset prefix i))))
+    (network prefix length)))
+
 (defn network-compare
   "Compare the prefixes of networks `left` and `right`, with the same result
 semantics as `compare`.  When `stable` is true (the default), 0 will only be

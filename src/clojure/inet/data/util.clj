@@ -91,3 +91,11 @@ pair of the starting index and length on success and nil on failure."
                          (unchecked-multiply-int (int 31))
                          (unchecked-add-int x))
                     (inc i))))))))
+
+;; Need to track down why, but without this reader literals for inet.data types
+;; fail to support code-embedding.
+(defmethod clojure.core/print-dup #=(java.lang.Class/forName "[B")
+  ([bytes ^java.io.Writer w]
+     (.write w "#=(byte-array ")
+     (.write w (-> bytes vec str))
+     (.write w ")")))

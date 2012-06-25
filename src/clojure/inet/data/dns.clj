@@ -17,7 +17,7 @@ given domain."
   (:use [inet.data.util :only [ignore-errors ffilter ubyte sbyte
                                bytes-hash-code]]
         [hier-set.core :only [hier-set-by]])
-  (:import [clojure.lang IFn ILookup IObj IPersistentMap]
+  (:import [clojure.lang IFn ILookup IObj]
            [inet.data.dns DNSDomainParser DNSDomainComparison]
            [java.util Arrays]
            [java.net IDN]))
@@ -133,7 +133,7 @@ standard string form."
   "Convert `dom` to IDN string form, interpreting Punycode."
   [dom] (-> dom domain-byte-seq bytes->name IDN/toUnicode))
 
-(deftype DNSDomain [^IPersistentMap meta, ^bytes bytes, ^long length]
+(deftype DNSDomain [meta, ^bytes bytes, ^long length]
   Object
   (toString [this] (bytes->name (take length bytes)))
   (hashCode [this] (bytes-hash-code bytes 0 length))

@@ -4,7 +4,7 @@
   (:use [inet.data.util :only [ignore-errors case-expr ubyte sbyte longest-run
                                bytes-hash-code doto-let]]
         [hier-set.core :only [hier-set-by]])
-  (:import [clojure.lang  IFn IObj IPersistentMap ILookup]
+  (:import [clojure.lang IFn IObj ILookup]
            [inet.data.ip IPParser IPNetworkComparison]
            [java.util Arrays]
            [java.net InetAddress]))
@@ -110,7 +110,7 @@ prefix length."
     IPParser/IPV4_BYTE_LEN (string-address-ipv4 bytes)
     IPParser/IPV6_BYTE_LEN (string-address-ipv6 bytes)))
 
-(deftype IPAddress [^IPersistentMap meta, ^bytes bytes]
+(deftype IPAddress [meta, ^bytes bytes]
   Object
   (toString [this] (string-address bytes))
   (hashCode [this] (bytes-hash-code bytes))
@@ -139,7 +139,7 @@ prefix length."
   (network?* [this] false)
   (network-length [this] (address-length bytes)))
 
-(deftype IPNetwork [^IPersistentMap meta, ^bytes prefix, ^long length]
+(deftype IPNetwork [meta, ^bytes prefix, ^long length]
   Object
   (toString [this] (str (string-address prefix) "/" length))
   (hashCode [this] (bytes-hash-code prefix length))

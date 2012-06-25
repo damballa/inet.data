@@ -1,4 +1,4 @@
-(defproject inet.data "0.3.4-SNAPSHOT"
+(defproject inet.data "0.3.4"
   :description "Represent and manipulate various Internet entities as data."
   :url "http://github.com/llasram/inet.data"
   :license {:name "Eclipse Public License"

@@ -48,6 +48,11 @@
           (is (= "fe:11::/32" (-> addr (ip/network 32) str))
               (format "From %s with explicit prefix-length." src)))))))
 
+(deftest test-network-trunc
+  (testing "Creating networks, truncating prefixes"
+    (is (= "192.168.0.128/25" (-> "192.168.0.255/25" ip/network-trunc str)))
+    (is (= "192.168.0.128/25" (-> "192.168.0.255" (ip/network-trunc 25) str)))))
+
 (deftest test-compare
   (testing "Identical addresses compare as identical"
     (is (zero? (ip/network-compare "8.8.8.8" "8.8.8.8")))

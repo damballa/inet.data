@@ -1,8 +1,8 @@
 (ns inet.data.ip
   "Functions for interacting with IP addresses and networks."
   (:require [clojure.string :as str])
-  (:use [inet.data.util :only
-         [ignore-errors case-expr ubyte sbyte longest-run bytes-hash-code]]
+  (:use [inet.data.util :only [ignore-errors case-expr ubyte sbyte longest-run
+                               bytes-hash-code doto-let]]
         [hier-set.core :only [hier-set-by]])
   (:import [clojure.lang  IFn IObj IPersistentMap ILookup]
            [inet.data.ip IPParser IPNetworkComparison]
@@ -56,16 +56,18 @@
 (defn network-trunc
   "Create a network with a prefix consisting of the first `length` bits of
 `prefix` and a length of `length`."
-  [prefix length]
-  (let [prefix (byte-array (address-bytes prefix))]
-    (loop [zbits (long (- (address-length prefix) length)),
-           i (->> prefix alength dec long)]
-      (cond (>= zbits 8) (do (aset prefix i (byte 0))
-                             (recur (- zbits 8) (dec i)))
-            (pos? zbits) (->> (bit-shift-left -1 zbits)
-                              (bit-and (aget prefix i)) byte
-                              (aset prefix i))))
-    (network prefix length)))
+  ([prefix]
+     (network-trunc prefix (network-length prefix)))
+  ([prefix length]
+     (network (doto-let [prefix (byte-array (address-bytes prefix))]
+                (loop [zbits (long (- (address-length prefix) length)),
+                       i (->> prefix alength dec long)]
+                  (cond (>= zbits 8) (do (aset prefix i (byte 0))
+                                         (recur (- zbits 8) (dec i)))
+                        (pos? zbits) (->> (bit-shift-left -1 zbits)
+                                          (bit-and (aget prefix i)) byte
+                                          (aset prefix i)))))
+              length)))
 
 (defn network-compare
   "Compare the prefixes of networks `left` and `right`, with the same result

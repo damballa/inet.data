@@ -1,7 +1,7 @@
 # inet.data
 
 Inet.data is a library for modeling various Internet-related conceptual
-entities as *data*, supporting applications with are *about* the modeled
+entities as *data*, supporting applications which are *about* the modeled
 entities versus *interfacing* with them.
 
 ## Installation
@@ -10,7 +10,7 @@ Inet.data is available on Clojars.  Add this `:dependency` to your Leiningen
 `project.clj`:
 
 ```clj
-[inet.data "0.3.4"]
+[inet.data "0.3.5"]
 ```
 
 ## Usage

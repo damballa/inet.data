@@ -58,14 +58,16 @@ which is also implemented for strings and byte arrays.
   )
 ```
 
-The `inet.data.dns.psl` namespace defines functions for working with files in
-the Mozilla Public Suffix List format.  It can automatically use the current
+### inet.data.format.psl
+
+The `inet.data.format.psl` namespace defines functions for working with files
+in the Mozilla Public Suffix List format.  It can automatically use the current
 version of the list as maintained by the Mozilla project.  The format is
 generally useful for domain suffix applications, but most applications will
 need to provide their own list(s) customized for their particular use cases.
 
 ```clj
-(require '[inet.data.dns.psl :as psl])
+(require '[inet.data.format.psl :as psl])
 
 (psl/lookup "www.example.co.uk") ;;=> #dns/domain "example.co.uk"
 ```

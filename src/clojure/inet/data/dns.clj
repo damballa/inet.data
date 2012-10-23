@@ -127,6 +127,7 @@ standard string form."
   [bytes] (str/join "." (bytes->labels bytes)))
 
 (defn domain-labels
+  "Seq of labels in the domain `dom`."
   [dom] (bytes->labels (domain-byte-seq dom)))
 
 (defn idn-str
@@ -210,7 +211,7 @@ provided."
   (domain [this] (domain* this this))
 
   DNSDomainOperations
-  (domain?* [this] (DNSDomainParser/isValid this))
+  (domain?* [this] (DNSDomainParser/isValid ^bytes this))
   (domain-bytes [this] this)
   (domain-length [this] (alength ^bytes this)))
 

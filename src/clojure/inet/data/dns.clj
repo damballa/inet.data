@@ -225,7 +225,7 @@ provided."
 
 (extend-type nil
   DNSDomainConstruction
-  (domain [this] root-domain)
+  (domain [this] nil)
 
   DNSDomainOperations
   (domain?* [this] true)

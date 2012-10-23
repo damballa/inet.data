@@ -81,4 +81,10 @@
     (let [networks (->> (range 0 256) (map #(ip/network (str "10.0.0." %)))
                         (apply ip/network-set))]
       (is (contains? networks "10.0.0.1"))
-      (is (not (contains? networks "10.0.1.1"))))))
+      (is (not (contains? networks "10.0.1.1"))))
+    (is (= (mapcat seq (ip/network-set "10.0.0.0/24" "10.0.1.0/31"))
+           (ip/address-range "10.0.0.0" "10.0.1.1"))
+        "Network seqs convert correctly to address range.")
+    (is (= (ip/network-set "10.0.0.0/24" "10.0.1.0/31")
+           (ip/address-networks "10.0.0.0" "10.0.1.1"))
+        "Address range converted correctly to set of networks")))

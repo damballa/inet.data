@@ -4,7 +4,7 @@
   (:use [inet.data.util :only [ignore-errors case-expr ubyte sbyte longest-run
                                bytes-hash-code doto-let]]
         [hier-set.core :only [hier-set-by]])
-  (:import [clojure.lang IFn IObj ILookup]
+  (:import [clojure.lang IFn IObj ILookup BigInt Indexed Seqable]
            [inet.data.ip IPParser IPNetworkComparison]
            [java.util Arrays]
            [java.net InetAddress]))
@@ -93,6 +93,97 @@ prefix length."
   [& nets] (apply hier-set-by network-contains? network-compare
                   (map network nets)))
 
+;; BigInteger mapping is internal-only.  BigInteger doesn't preserve the input
+;; byte-array size, so we need to prepend a pseudo-magic prefix to retain the
+;; address length.
+(defn ^:private address->BigInteger
+  "Convert `addr` to an internal-format BigInteger."
+  ^BigInteger [addr]
+  (->> addr address-bytes (cons (byte 63)) byte-array BigInteger.))
+
+(defn address-add
+  "The `n`th address following `addr` numerically."
+  [addr n]
+  (->> (condp instance? n
+         BigInteger n
+         BigInt     (.toBigInteger ^BigInt n)
+         ,,,,,,     (BigInteger/valueOf (long n)))
+       (.add (address->BigInteger addr))
+       address))
+
+(defn address-range
+  "Sequence of addresses from `start` to `stop` *inclusive*."
+  [start stop]
+  (let [stop (address->BigInteger stop)]
+    ((fn step [^BigInteger addr]
+       (lazy-seq
+        (when-not (pos? (.compareTo addr stop))
+          (cons (address addr) (step (.add addr BigInteger/ONE))))))
+     (address->BigInteger start))))
+
+(defn network-count
+  "Count of addresses in network `net`."
+  [net]
+  (let [nbits (- (address-length net) (network-length net))]
+    (if (> 63 nbits)
+      (bit-shift-left 1 nbits)
+      (BigInt/fromBigInteger (.shiftLeft BigInteger/ONE nbits)))))
+
+(defn network-nth
+  "The `n`th address in the network `net`.  Negative `n`s count backwards
+from the final address at -1."
+  [net n] (address-add net (if (neg? n) (+ n (network-count net)) n)))
+
+(defn network-supernet
+  "Network containing the network `net` with a prefix shorter by `n` bits,
+default 1."
+  ([net] (network-supernet net 1))
+  ([net n]
+     (let [pbits (- (network-length net) n)]
+       (when-not (neg? pbits)
+         (network-trunc net pbits)))))
+
+(defn network-subnets
+  "Set of networks within the network `net` which have `n` additional bits of
+network prefix, default 1."
+  ([net] (network-subnets net 1))
+  ([net n]
+     (let [pbits (+ (network-length net) n)
+           nbits (- (address-length net) pbits)
+           one (.shiftLeft BigInteger/ONE nbits)
+           lower (address->BigInteger net)
+           over (.add lower (.shiftLeft one n))
+           step (fn step [^BigInteger addr]
+                  (lazy-seq
+                   (when (neg? (.compareTo addr over))
+                     (cons (network addr pbits) (step (.add addr one))))))]
+       (apply network-set (step lower)))))
+
+(defn address-zero?
+  "True iff address `addr` is the zero address."
+  [addr] (every? zero? (address-bytes addr)))
+
+(defn address-networks
+  "Minimal set of networks containing only the addresses in the range from
+`start` to `stop` *inclusive*."
+  [start stop]
+  (let [stop (address stop)
+        nnet (fn [net]
+               (let [net' (network-supernet net)]
+                 (if (or (nil? net')
+                         (pos? (network-compare start (network-nth net' 0)))
+                         (neg? (network-compare stop (network-nth net' -1))))
+                   net
+                   (recur net'))))
+        step (fn step [start]
+               (lazy-seq
+                (when-not (pos? (network-compare start stop))
+                  (let [net (nnet (network start))
+                        start' (address-add net (network-count net))]
+                    (cons net (when-not (address-zero? start')
+                                (step start')))))))]
+    (apply network-set (step (address start)))))
+
 (defn- string-address-ipv4 [^bytes bytes]
   (->> bytes (map ubyte) (str/join ".")))
 
@@ -170,6 +261,14 @@ prefix length."
     (when (network-contains? this key) key))
   (invoke [this key default]
     (if (network-contains? this key) key default))
+
+  Indexed
+  (count [this] (network-count this))
+  (nth [this n] (network-nth this n))
+
+  Seqable
+  (seq [this]
+    (address-range (nth this 0) (nth this -1)))
 
   IPAddressOperations
   (address?* [this] false)
@@ -297,6 +396,34 @@ prefix length."
       java.net.Inet4Address IPParser/IPV4_BIT_LEN
       java.net.Inet6Address IPParser/IPV6_BIT_LEN
       -1))
+
+  IPNetworkConstruction
+  (network
+    ([this] (IPNetwork. nil (address-bytes this) (address-length this)))
+    ([this length] (network* this (address-bytes this) length)))
+
+  IPNetworkOperations
+  (network?*
+    ([this] false)
+    ([this length] (network?* (address-bytes this) length)))
+  (network-length [this] (address-length this)))
+
+(extend-type BigInteger
+  IPAddressConstruction
+  (address [addr] (address* addr (address-bytes addr)))
+
+  IPAddressOperations
+  (address?* [addr] true)
+  (address-bytes [addr]
+    (let [b (.toByteArray addr),
+          n (if (> (alength b) IPParser/IPV6_BYTE_LEN)
+              IPParser/IPV6_BYTE_LEN
+              IPParser/IPV4_BYTE_LEN)]
+      (byte-array (take-last n b))))
+  (address-length [addr]
+    (if (> (.bitLength addr) IPParser/IPV6_BIT_LEN)
+      IPParser/IPV6_BIT_LEN
+      IPParser/IPV4_BIT_LEN))
 
   IPNetworkConstruction
   (network

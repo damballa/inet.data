@@ -95,8 +95,10 @@ parse(String addr, byte[] buffer) {
         return INVALID;
 
     if (buffer != null && elision >= 0) {
-        int diff = IPV6_BYTE_LEN - nbytes;
-        for (int i = elision; i < nbytes; i++) {
+        // Source begins prior to but may overlap destination, so copy
+        // backwards to avoid stomping overlapping bytes
+        final int diff = IPV6_BYTE_LEN - nbytes;
+        for (int i = nbytes - 1; i >= elision; --i) {
             buffer[i + diff] = buffer[i];
             buffer[i] = 0;
         }

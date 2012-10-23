@@ -19,7 +19,9 @@
     (let [addr "172.12.16.1"]
       (is (= addr (-> addr ip/address str)) "IPv4 address strings"))
     (let [addr "fe:1100::1"]
-      (is (= addr (-> addr ip/address str)) "IPv6 address strings"))))
+      (is (= addr (-> addr ip/address str)) "IPv6 address strings"))
+    (let [addr "::2:2:1:1:1"]
+      (is (= addr (-> addr ip/address str)) "No IPv6 elision-stomping"))))
 
 (deftest test-network
   (testing "Creating networks"

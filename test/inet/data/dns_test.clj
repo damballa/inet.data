@@ -74,4 +74,7 @@
 
 (deftest test-domain-utility
   (is (= '("www" "example" "com") (dns/domain-labels "www.example.com"))
-      "Turn domain into sequence of labels."))
+      "Turn domain into sequence of labels.")
+  (is (= (-> "www.google.com" dns/domain dns/domain-parent)
+         (-> "google.com" dns/domain))
+      "Get immediate parent of domain."))

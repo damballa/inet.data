@@ -206,6 +206,17 @@ provided."
      (->> (iterate #(domain-next child %) parent) (drop 1)
           (take-while identity))))
 
+(defn domain-parent
+  "Return the domain for which `dom` is an immediate sub-domain."
+  [dom]
+  (let [bytes (domain-bytes dom), total (domain-length dom)]
+    (when (pos? total)
+      (let [length (loop [length (long 0)]
+                     (let [length' (+ length (aget ^bytes bytes length) 1)]
+                       (if (>= length' total) length (recur length'))))]
+        (when (pos? length)
+          (DNSDomain. nil bytes length))))))
+
 (extend-type (java.lang.Class/forName "[B")
   DNSDomainConstruction
   (domain [this] (domain* this this))

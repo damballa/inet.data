@@ -10,7 +10,7 @@ Inet.data is available on Clojars.  Add this `:dependency` to your Leiningen
 `project.clj`:
 
 ```clj
-[inet.data "0.4.0"]
+[inet.data "0.5.0"]
 ```
 
 ## Usage
@@ -36,6 +36,19 @@ is also implemented for strings, byte arrays, and `java.net.InetAddress`.
   (get rfc1918 "10.31.33.7") ;;=> (#ip/network "10.0.0.0/8")
   (get rfc1918 "8.8.8.8") ;;=> nil
   )
+
+(seq (ip/network "192.168.0.0/30"))
+;;=> (#ip/address "192.168.0.0"
+;;    #ip/address "192.168.0.1"
+;;    #ip/address "192.168.0.2"
+;;    #ip/address "192.168.0.3")
+
+(ip/network-nth (ip/network "192.168.0.0/30") -1)
+;;=> #ip/address "192.168.0.3"
+
+(ip/address-networks "192.168.0.0" "192.168.0.4")
+;;=> #{#ip/network "192.168.0.0/30"
+;;     #ip/network "192.168.0.4/32"}
 ```
 
 ### inet.data.dns
@@ -51,6 +64,8 @@ which is also implemented for strings and byte arrays.
 
 (dns/domain? "example.com") ;;=> true
 (dns/domain? "bad..com") ;;=> false
+
+(dns/domain-parent "www.example.com") ;;=> #dns/domain "example.com"
 
 (let [gtlds (dns/domain-set "com" "net" "org")]
   (get gtlds "example.com") ;;=> (#dns/domain "com")

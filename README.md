@@ -43,7 +43,7 @@ is also implemented for strings, byte arrays, and `java.net.InetAddress`.
 ;;    #ip/address "192.168.0.2"
 ;;    #ip/address "192.168.0.3")
 
-(ip/network-nth (ip/network "192.168.0.0/30") -1)
+(ip/network-nth "192.168.0.0/30" -1)
 ;;=> #ip/address "192.168.0.3"
 
 (ip/address-networks "192.168.0.0" "192.168.0.4")

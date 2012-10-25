@@ -1,0 +1,4 @@
+.lein-failures
+/doc/
+pom.xml
+/target/

@@ -10,13 +10,14 @@ Inet.data is available on Clojars.  Add this `:dependency` to your Leiningen
 `project.clj`:
 
 ```clj
-[inet.data "0.5.0"]
+[inet.data "0.5.1"]
 ```
 
 ## Usage
 
 Currently inet.data includes support for IP addresses and networks and for DNS
-domain names.
+domain names.  Example usage follows; [detailed API
+documentation](http://llasram.github.com/inet.data/) available.
 
 ### inet.data.ip
 

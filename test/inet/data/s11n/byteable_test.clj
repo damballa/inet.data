@@ -27,7 +27,9 @@
     (let [net (ip/network "192.168.0.0/16")]
       (is (= net (round-trip net)) "for IPv4 networks"))
     (let [net (ip/network "fe:1100::/32")]
-      (is (= net (round-trip net)) "for IPv6 networks"))))
+      (is (= net (round-trip net)) "for IPv6 networks"))
+    (let [net (ip/network "fe:1100::/128")]
+      (is (= net (round-trip net)) "for full-address IPv6 networks"))))
 
 (deftest test-dns-domain
   (testing "DNSDomain byteable de/s11n round-tripping"

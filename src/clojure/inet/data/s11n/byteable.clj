@@ -21,7 +21,7 @@
   (read [_ input]
     (ip/network (doto-let [bytes (-> input .readByte ubyte byte-array)]
                   (.readFully input bytes))
-                (-> input .readByte int)))
+                (-> input .readByte ubyte)))
   (write [net output]
     (let [^bytes bytes (ip/address-bytes net)]
       (doto output

@@ -65,8 +65,8 @@
                   (cond (>= zbits 8) (do (aset prefix i (byte 0))
                                          (recur (- zbits 8) (dec i)))
                         (pos? zbits) (->> (bit-shift-left -1 zbits)
-                                          (bit-and (aget prefix i)) byte
-                                          (aset prefix i)))))
+                                          (bit-and (long (aget prefix i)))
+                                          byte (aset prefix i)))))
               length)))
 
 (defn network-compare

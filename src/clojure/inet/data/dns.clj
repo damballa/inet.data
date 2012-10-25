@@ -214,7 +214,7 @@ provided."
   (let [bytes (domain-bytes dom), total (domain-length dom)]
     (when (pos? total)
       (let [length (loop [length (long 0)]
-                     (let [length' (+ length (aget ^bytes bytes length) 1)]
+                     (let [length' (+ 1 length (long (aget ^bytes bytes length)))]
                        (if (>= length' total) length (recur length'))))]
         (when (pos? length)
           (DNSDomain. nil bytes length))))))

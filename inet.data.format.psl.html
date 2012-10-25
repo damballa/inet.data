@@ -15,7 +15,6 @@ differences:
 
 See the tests for examples.</pre><div class="public" id="var-*default-psl-url*"><h3>*default-psl-url*</h3><div class="usage"></div><pre class="doc">URL of the default Mozilla Public Suffix List file.
 </pre></div><div class="public" id="var-load"><h3>load</h3><div class="usage"><code>(load source)</code></div><pre class="doc">Load a Mozilla Public Suffix List format file from the Reader `source`.
-Optionally supply the default rule type `default'.  If unspecified, defaults to
-`:normal`, but may be useful to provide as `:dynamic`.</pre></div><div class="public" id="var-lookup"><h3>lookup</h3><div class="usage"><code>(lookup dom)</code><code>(lookup psl dom)</code></div><pre class="doc">Determine the E2LD of `domain` as specified by the PSL loaded in `psl`.
+</pre></div><div class="public" id="var-lookup"><h3>lookup</h3><div class="usage"><code>(lookup dom)</code><code>(lookup psl dom)</code></div><pre class="doc">Determine the E2LD of `domain` as specified by the PSL loaded in `psl`.
 Uses the default PSL loaded from `*default-psl-url*` if `psl` is not provided.
 Returns `nil` if the domain does not match the provided PSL.</pre></div></div></body></html>

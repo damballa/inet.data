@@ -22,12 +22,12 @@ given domain."
            [java.util Arrays]
            [java.net IDN]))
 
-(defprotocol DNSDomainConstruction
+(defprotocol ^:no-doc DNSDomainConstruction
   "Construct a full domain object."
   (domain [dom]
     "Create a DNSDomain from another representation."))
 
-(defprotocol DNSDomainOperations
+(defprotocol ^:no-doc DNSDomainOperations
   "Operations on objects which may be treated as domains."
   (^:private domain?* [dom]
     "Returns whether or not the value represents a valid domain.")
@@ -174,6 +174,8 @@ standard string form."
   (domain?* [this] true)
   (domain-bytes [this] bytes)
   (domain-length [this] length))
+
+(ns-unmap *ns* '->DNSDomain)
 
 (def ^:private root-domain
   "The singleton empty root domain."

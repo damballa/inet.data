@@ -1,4 +1,5 @@
 (ns inet.data.s11n.byteable
+  "Byteable serialization implementations for inet.data type."
   (:require [byteable.core :as b]
             [inet.data.ip :as ip]
             [inet.data.dns :as dns])

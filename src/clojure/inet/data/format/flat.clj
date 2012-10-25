@@ -3,9 +3,9 @@
   (:refer-clojure :exclude [load])
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
-            [inet.data.util :refer [ignore-errors ffilter]]
             [inet.data.ip :as ip]
-            [inet.data.dns :as dns]))
+            [inet.data.dns :as dns])
+  (:use [inet.data.util :refer [ignore-errors ffilter]]))
 
 (defn ^:private parse-lines [f & readers]
   (->> (mapcat line-seq readers)

@@ -9,12 +9,12 @@
            [java.util Arrays]
            [java.net InetAddress]))
 
-(defprotocol IPAddressConstruction
+(defprotocol ^:no-doc IPAddressConstruction
   "Construct a full address object."
   (address [addr]
     "Create an IPAddress from another representation."))
 
-(defprotocol IPAddressOperations
+(defprotocol ^:no-doc IPAddressOperations
   "Operations on objects which may be treated as addresses."
   (^:private address?* [addr]
     "Returns whether or not the value represents a valid address.")
@@ -23,12 +23,12 @@
   (address-length [addr]
     "The length in bits of this address."))
 
-(defprotocol IPNetworkConstruction
+(defprotocol ^:no-doc IPNetworkConstruction
   "Construct a full network object."
   (network [net] [prefix length]
     "Create an IPNetwork from another representation."))
 
-(defprotocol IPNetworkOperations
+(defprotocol ^:no-doc IPNetworkOperations
   "Operations on objects which may be treated as networks."
   (^:private network?* [net] [addr length]
     "Returns whether or not the value represents a valid network.")
@@ -230,6 +230,8 @@ network prefix, default 1."
   (network?* [this] false)
   (network-length [this] (address-length bytes)))
 
+(ns-unmap *ns* '->IPAddress)
+
 (deftype IPNetwork [meta, ^bytes prefix, ^long length]
   Object
   (toString [this] (str (string-address prefix) "/" length))
@@ -278,6 +280,8 @@ network prefix, default 1."
   IPNetworkOperations
   (network?* [this] true)
   (network-length [this] length))
+
+(ns-unmap *ns* '->IPNetwork)
 
 (defn- address*
   [orig ^bytes bytes]

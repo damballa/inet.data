@@ -17,8 +17,8 @@ See the tests for examples."
   (:refer-clojure :exclude [load])
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
-            [inet.data.util :refer [ffilter]]
-            [inet.data.dns :as dns]))
+            [inet.data.dns :as dns])
+  (:use [inet.data.util :only [ffilter]]))
 
 (def ^:dynamic *default-psl-url*
   "URL of the default Mozilla Public Suffix List file."
@@ -26,9 +26,7 @@ See the tests for examples."
        "effective_tld_names.dat?raw=1"))
 
 (defn load
-  "Load a Mozilla Public Suffix List format file from the Reader `source`.
-Optionally supply the default rule type `default'.  If unspecified, defaults to
-`:normal`, but may be useful to provide as `:dynamic`."
+  "Load a Mozilla Public Suffix List format file from the Reader `source`."
   [source]
   (letfn [(prefix? [^String s1 ^String s2] (.startsWith s2 s1))
           (ignorable? [s] (or (empty? s) (prefix? "//" s) (prefix? "#" s)))

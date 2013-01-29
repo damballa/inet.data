@@ -17,7 +17,7 @@ Inet.data is available on Clojars.  Add this `:dependency` to your Leiningen
 
 Currently inet.data includes support for IP addresses and networks and for DNS
 domain names.  Example usage follows; [detailed API
-documentation](http://llasram.github.com/inet.data/) available.
+documentation](http://damballa.github.com/inet.data/) available.
 
 ### inet.data.ip
 

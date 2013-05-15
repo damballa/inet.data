@@ -6,6 +6,7 @@
         [hier-set.core :only [hier-set-by]])
   (:import [clojure.lang IFn IObj ILookup BigInt Indexed Seqable]
            [inet.data.ip IPParser IPNetworkComparison]
+           [java.io Serializable]
            [java.util Arrays]
            [java.net InetAddress]))
 
@@ -202,6 +203,8 @@ network prefix, default 1."
     IPParser/IPV6_BYTE_LEN (string-address-ipv6 bytes)))
 
 (deftype IPAddress [meta, ^bytes bytes]
+  Serializable
+
   Object
   (toString [this] (string-address bytes))
   (hashCode [this] (bytes-hash-code bytes))
@@ -233,6 +236,8 @@ network prefix, default 1."
 (ns-unmap *ns* '->IPAddress)
 
 (deftype IPNetwork [meta, ^bytes prefix, ^long length]
+  Serializable
+
   Object
   (toString [this] (str (string-address prefix) "/" length))
   (hashCode [this] (bytes-hash-code prefix length))

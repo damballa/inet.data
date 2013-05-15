@@ -19,6 +19,7 @@ given domain."
         [hier-set.core :only [hier-set-by]])
   (:import [clojure.lang IFn ILookup IObj]
            [inet.data.dns DNSDomainParser DNSDomainComparison]
+           [java.io Serializable]
            [java.util Arrays]
            [java.net IDN]))
 
@@ -135,6 +136,8 @@ standard string form."
   [dom] (-> dom domain-byte-seq bytes->name IDN/toUnicode))
 
 (deftype DNSDomain [meta, ^bytes bytes, ^long length]
+  Serializable
+
   Object
   (toString [this] (bytes->name (take length bytes)))
   (hashCode [this] (bytes-hash-code bytes 0 length))

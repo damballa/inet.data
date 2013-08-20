@@ -6,5 +6,5 @@ git checkout gh-pages
 rsync -r doc/ .
 git add .
 git commit
-git push -u origin gh-pages
+git push -u damballa gh-pages
 git checkout master

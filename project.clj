@@ -17,5 +17,5 @@
   :aliases {"doc!" ["with-profile" "doc,dev" "doc"]}
   :profiles {:dev {:dependencies [[byteable "0.2.0"]
                                   [com.damballa/abracad "0.4.0"]
-                                  [criterium "0.2.1"]]}
+                                  [criterium "0.4.1"]]}
              :doc {:dependencies [[org.clojure/clojure "1.3.0"]]}})

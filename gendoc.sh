@@ -1,7 +1,7 @@
 #! /bin/sh -e
 
 git checkout master
-lein doc!
+lein doc
 git checkout gh-pages
 rsync -r doc/ .
 git add .

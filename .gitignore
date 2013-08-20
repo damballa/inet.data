@@ -9,3 +9,4 @@
 /target
 *.log
 /doc/
+.lein-repl-history

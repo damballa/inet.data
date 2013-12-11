@@ -7,13 +7,17 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [hier-set "1.1.2"]]
   :plugins [[lein-ragel "0.1.0"]
-            [codox "0.6.4"]]
+            [codox "0.6.6"]]
   :source-paths ["src/clojure"]
   :java-source-paths ["src/java" "target/ragel"]
   :ragel-source-paths ["src/ragel"]
   :javac-options ["-target" "1.6" "-source" "1.6"]
   :prep-tasks ["ragel" "javac"]
-  :codox {:exclude [inet.data.util]}
+  :codox {:src-dir-uri "https://github.com/damballa/inet.data/blob/master/"
+          :src-linenum-anchor-prefix "L"
+          :sources ["src/clojure"]
+          :exclude [inet.data.util]
+          :output-dir "tmp/codox"}
   :profiles {:dev {:dependencies [[criterium "0.4.2"]]}
              :provided
              {:dependencies

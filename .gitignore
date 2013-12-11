@@ -10,3 +10,4 @@
 *.log
 /doc/
 .lein-repl-history
+/tmp/

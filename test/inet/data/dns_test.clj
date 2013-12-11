@@ -78,3 +78,10 @@
   (is (= (-> "www.google.com" dns/domain dns/domain-parent)
          (-> "google.com" dns/domain))
       "Get immediate parent of domain."))
+
+(deftest test-domain-ancestors
+  (is (= (map dns/domain ["com" "foo.com" "bar.foo.com"])
+         (dns/domain-ancestors "bar.foo.com")))
+  (is (empty?
+       (dns/domain-ancestors
+        "foo\u002bar\u0000\ufffd\u00da\ufffd\ufffd"))))

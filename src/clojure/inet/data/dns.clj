@@ -86,6 +86,10 @@ underscores in hostnames if `underscores` is true (default false)."
      (DNSDomainParser/isValidHostname
       (domain-bytes dom) (domain-length dom) underscores)))
 
+(def ^:private ^:const empty-bytes
+  "Empty byte array."
+  (byte-array []))
+
 (defn- name->bytes
   "Convert a string domain name into an internal normalized byte form.  Returns
 an arbitrary invalid result if the name cannot be encoded."
@@ -95,7 +99,7 @@ an arbitrary invalid result if the name cannot be encoded."
          (mapcat #(let [bytes (.getBytes ^String % "US-ASCII")]
                     (cons (sbyte (count bytes)) bytes)))
          byte-array)
-    (byte-array [(byte -1)])))
+    empty-bytes))
 
 (defn- wire->bytes
   "Convert a DNS wire-form domain name into an internal normalized byte form."
@@ -182,7 +186,7 @@ standard string form."
 
 (def ^:private root-domain
   "The singleton empty root domain."
-  (DNSDomain. nil (byte-array []) 0))
+  (DNSDomain. nil empty-bytes 0))
 
 (defn- domain*
   "Private bytes->domain factory."

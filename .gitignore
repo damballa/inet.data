@@ -2,3 +2,5 @@
 /doc/
 pom.xml
 /target/
+/tmp/
+.lein-*

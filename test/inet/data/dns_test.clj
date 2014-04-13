@@ -85,3 +85,7 @@
   (is (empty?
        (dns/domain-ancestors
         "foo\u002bar\u0000\ufffd\u00da\ufffd\ufffd"))))
+
+(deftest test-domain-set-edn
+  (let [doms (dns/domain-set "example.com" "example.net")]
+    (is (= doms (-> doms pr-str read-string)))))

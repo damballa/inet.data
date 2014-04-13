@@ -73,10 +73,26 @@ comparison always occurs in a case-independent fashion."
   (and (< (domain-length parent) (domain-length child))
        (zero? (domain-compare false parent child))))
 
+(defn ->domain-set
+  "Create a hierarchical set from domains in `coll`."
+  [coll]
+  (-> (apply hier-set-by domain-contains? domain-compare
+             (map domain coll))
+      (vary-meta assoc :type ::domain-set)))
+
 (defn domain-set
   "Create a hierarchical set from domains `doms`."
-  [& doms] (apply hier-set-by domain-contains? domain-compare
-                  (map domain doms)))
+  [& doms] (->domain-set doms))
+
+(defmethod clojure.core/print-method ::domain-set
+  [doms ^java.io.Writer w]
+  (.write w "#dns/domain-set #{")
+  (loop [first? true, doms (seq doms)]
+    (when doms
+      (when-not first? (.write w " "))
+      (print-method (first doms) w)
+      (recur false (next doms))))
+  (.write w "}"))
 
 (defn domain-hostname?
   "Determine if the provided domain `dom` is a valid hostname.  Allow

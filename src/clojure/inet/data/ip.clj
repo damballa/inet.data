@@ -89,10 +89,26 @@ prefix length."
        (and (<= length (network-length addr))
             (zero? (network-compare false net addr))))))
 
+(defn ->network-set
+  "Create a hierarchical set from networks in `coll`."
+  [coll]
+  (-> (apply hier-set-by network-contains? network-compare
+             (map network coll))
+      (vary-meta assoc :type ::network-set)))
+
 (defn network-set
   "Create a hierarchical set from networks `nets`."
-  [& nets] (apply hier-set-by network-contains? network-compare
-                  (map network nets)))
+  [& nets] (->network-set nets))
+
+(defmethod clojure.core/print-method ::network-set
+  [nets ^java.io.Writer w]
+  (.write w "#ip/network-set #{")
+  (loop [first? true, nets (seq nets)]
+    (when nets
+      (when-not first? (.write w " "))
+      (print-method (first nets) w)
+      (recur false (next nets))))
+  (.write w "}"))
 
 ;; BigInteger mapping is internal-only.  BigInteger doesn't preserve the input
 ;; byte-array size, so we need to prepend a pseudo-magic prefix to retain the

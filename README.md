@@ -90,6 +90,7 @@ need to provide their own list(s) customized for their particular use cases.
 
 ## License
 
-Copyright (C) 2012 Marshall T. Vandegrift
+Copyright © 2012-2014 Marshall Bockrath-Vandegrift & Damballa, Inc.
 
-Distributed under the Eclipse Public License, the same as Clojure.
+Distributed under the Eclipse Public License either version 1.0 or (at
+your option) any later version.

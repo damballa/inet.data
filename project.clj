@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :global-vars {*warn-on-reflection* true}
-  :dependencies [[org.clojure/clojure "1.5.1"]
+  :dependencies [[org.clojure/clojure "1.6.0"]
                  [hier-set "1.1.2"]]
   :plugins [[lein-ragel "0.1.0"]
             [codox "0.6.6"]]
@@ -18,8 +18,15 @@
           :sources ["src/clojure"]
           :exclude [inet.data.util]
           :output-dir "tmp/codox"}
-  :profiles {:dev {:dependencies [[criterium "0.4.2"]]}
-             :provided
-             {:dependencies
-              [[byteable "0.2.0"]
-               [com.damballa/abracad "0.4.8"]]}})
+  :aliases {"all" ["with-profile" ~(str "+clojure-1-4:"
+                                        "+clojure-1-5:"
+                                        "+clojure-1-6")]}
+  :profiles {:provided {:dependencies
+                        [[byteable "0.2.0"]
+                         [com.damballa/abracad "0.4.10"]]}
+             :clojure-1-4 {:dependencies
+                           [[org.clojure/clojure "1.4.0"]]}
+             :clojure-1-5 {:dependencies
+                           [[org.clojure/clojure "1.5.1"]]}
+             :clojure-1-6 {:dependencies
+                           [[org.clojure/clojure "1.6.0"]]}})

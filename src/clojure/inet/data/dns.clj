@@ -25,17 +25,17 @@ given domain."
 
 (defprotocol ^:no-doc DNSDomainConstruction
   "Construct a full domain object."
-  (domain [dom]
-    "Create a DNSDomain from another representation."))
+  (^:private -domain [dom]
+    "Produce a DNSDomain from `dom`."))
 
 (defprotocol ^:no-doc DNSDomainOperations
   "Operations on objects which may be treated as domains."
-  (^:private domain?* [dom]
+  (^:private -domain? [dom]
     "Returns whether or not the value represents a valid domain.")
-  (domain-bytes [dom]
+  (^bytes domain-bytes [dom]
     "Retrieve the internal normalized byte form of the domain as a byte array.
 Only the first `domain-length` bytes will actually contain the domain.")
-  (domain-length [dom]
+  (^long domain-length [dom]
     "The length in bytes of this domain."))
 
 (defn domain-byte-seq
@@ -46,7 +46,7 @@ sequence of bytes."
 (defn domain?
   "Determine if dom is a value which represents a DNS domain."
   [dom] (and (satisfies? DNSDomainOperations dom)
-             (boolean (domain?* dom))))
+             (boolean (-domain? dom))))
 
 (defn domain-compare
   "Compare two domains, with the same result semantics as `compare`.  When
@@ -106,7 +106,7 @@ underscores in hostnames if `underscores` is true (default false)."
   "Empty byte array."
   (byte-array []))
 
-(defn- name->bytes
+(defn ^:private name->bytes
   "Convert a string domain name into an internal normalized byte form.  Returns
 an arbitrary invalid result if the name cannot be encoded."
   ^bytes [^String name]
@@ -117,7 +117,7 @@ an arbitrary invalid result if the name cannot be encoded."
          byte-array)
     empty-bytes))
 
-(defn- wire->bytes
+(defn ^:private wire->bytes
   "Convert a DNS wire-form domain name into an internal normalized byte form."
   (^bytes [wire]
      (->> [nil wire]
@@ -130,7 +130,7 @@ an arbitrary invalid result if the name cannot be encoded."
   (^bytes [wire ^long offset ^long length]
      (->> wire (drop offset) (take length) wire->bytes)))
 
-(defn- bytes->labels
+(defn ^:private bytes->labels
   "Convert the internal normalized byte form of the domain in bytes into a
 sequence of label strings."
   [bytes] (->> [nil bytes]
@@ -142,7 +142,7 @@ sequence of label strings."
                (#(if (empty? (first %)) (reverse %) %))
                (map #(String. (byte-array %) "US-ASCII"))))
 
-(defn- bytes->name
+(defn ^:private bytes->name
   "Convert the internal normalized byte form of the domain in bytes into its
 standard string form."
   [bytes] (str/join "." (bytes->labels bytes)))
@@ -191,10 +191,10 @@ standard string form."
     (if (domain-contains? this key) key default))
 
   DNSDomainConstruction
-  (domain [this] this)
+  (-domain [this] this)
 
   DNSDomainOperations
-  (domain?* [this] true)
+  (-domain? [this] true)
   (domain-bytes [this] bytes)
   (domain-length [this] length))
 
@@ -204,10 +204,15 @@ standard string form."
   "The singleton empty root domain."
   (DNSDomain. nil empty-bytes 0))
 
-(defn- domain*
+(defn domain
+  "The DNS domain for representation `dom`."
+  {:tag `DNSDomain}
+  [dom] (-domain dom))
+
+(defn ^:private domain*
   "Private bytes->domain factory."
   [orig ^bytes bytes]
-  (when (domain?* bytes)
+  (when (-domain? bytes)
     (DNSDomain. nil bytes (alength bytes))))
 
 (defn domain-next
@@ -244,28 +249,28 @@ provided."
 
 (extend-type (java.lang.Class/forName "[B")
   DNSDomainConstruction
-  (domain [this] (domain* this this))
+  (-domain [this] (domain* this this))
 
   DNSDomainOperations
-  (domain?* [this] (DNSDomainParser/isValid ^bytes this))
+  (-domain? [this] (DNSDomainParser/isValid ^bytes this))
   (domain-bytes [this] this)
   (domain-length [this] (alength ^bytes this)))
 
 (extend-type String
   DNSDomainConstruction
-  (domain [this] (domain* this (name->bytes this)))
+  (-domain [this] (domain* this (name->bytes this)))
 
   DNSDomainOperations
-  (domain?* [this] (domain?* (name->bytes this)))
+  (-domain? [this] (-domain? (name->bytes this)))
   (domain-bytes [this] (name->bytes this))
   (domain-length [this] (alength (name->bytes this))))
 
 (extend-type nil
   DNSDomainConstruction
-  (domain [this] nil)
+  (-domain [this] nil)
 
   DNSDomainOperations
-  (domain?* [this] true)
+  (-domain? [this] true)
   (domain-bytes [this] (domain-bytes root-domain))
   (domain-length [this] 0))
 

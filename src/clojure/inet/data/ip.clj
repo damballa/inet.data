@@ -12,22 +12,22 @@
 
 (defprotocol ^:no-doc IPAddressConstruction
   "Construct a full address object."
-  (address [addr]
-    "Create an IPAddress from another representation."))
+  (^:private -address [addr]
+    "Produce an IPAddress from `addr`."))
 
 (defprotocol ^:no-doc IPAddressOperations
   "Operations on objects which may be treated as addresses."
-  (^:private address?* [addr]
+  (^:private -address? [addr]
     "Returns whether or not the value represents a valid address.")
-  (address-bytes [addr]
+  (^bytes address-bytes [addr]
     "Retrieve the bytes representation of this address.")
-  (address-length [addr]
+  (^long address-length [addr]
     "The length in bits of this address."))
 
 (defprotocol ^:no-doc IPNetworkConstruction
   "Construct a full network object."
-  (network [net] [prefix length]
-    "Create an IPNetwork from another representation."))
+  (^:private -network [net] [prefix length]
+    "Produce an IPNetwork from `net` or `prefix` & `length`."))
 
 (defprotocol ^:no-doc IPNetworkOperations
   "Operations on objects which may be treated as networks."
@@ -36,39 +36,86 @@
   (network-length [net]
     "The length in bits of the network prefix."))
 
-(defn address?
-  "Determine if `addr` is a value which represents an IP address."
-  [addr] (and (satisfies? IPAddressOperations addr)
-              (boolean (address?* addr))))
+(defn ^:private string-address-ipv4
+  [^bytes bytes]
+  (->> bytes (map ubyte) (str/join ".")))
 
-(defn network?
-  "Determine if `net` is a value which represents an IP network."
-  ([net]
-     (and (satisfies? IPNetworkOperations net)
-          (boolean (network?* net))))
-  ([addr length]
-     (and (satisfies? IPNetworkOperations addr)
-          (boolean (network?* addr length)))))
+(letfn [(->short [[m x]] (-> m (bit-shift-left 8) (bit-or x)))
+        (->str [xs] (->> xs (map #(format "%x" %)) (str/join ":")))]
+  (defn ^:private string-address-ipv6
+    [^bytes bytes]
+    (let [shorts (->> bytes (map ubyte) (partition 2) (map ->short))]
+      (if-let [[nt nd] (longest-run 0 shorts)]
+        (str (->str (take nt shorts)) "::" (->str (drop (+ nt nd) shorts)))
+        (->str shorts)))))
 
-(defn inet-address
-  "Generate a java.net.InetAddress from the provided value."
-  [addr] (InetAddress/getByAddress (address-bytes addr)))
+(defn ^:private string-address
+  [^bytes bytes]
+  (case-expr (alength bytes)
+    IPParser/IPV4_BYTE_LEN (string-address-ipv4 bytes)
+    IPParser/IPV6_BYTE_LEN (string-address-ipv6 bytes)))
 
-(defn network-trunc
-  "Create a network with a prefix consisting of the first `length` bits of
-`prefix` and a length of `length`."
-  ([prefix]
-     (network-trunc prefix (network-length prefix)))
-  ([prefix length]
-     (network (doto-let [prefix (byte-array (address-bytes prefix))]
-                (loop [zbits (long (- (address-length prefix) length)),
-                       i (->> prefix alength dec long)]
-                  (cond (>= zbits 8) (do (aset prefix i (byte 0))
-                                         (recur (- zbits 8) (dec i)))
-                        (pos? zbits) (->> (bit-shift-left -1 zbits)
-                                          (bit-and (long (aget prefix i)))
-                                          byte (aset prefix i)))))
-              length)))
+(deftype IPAddress [meta, ^bytes bytes]
+  Serializable
+
+  Object
+  (toString [this] (string-address bytes))
+  (hashCode [this] (bytes-hash-code bytes))
+  (equals [this other]
+    (or (identical? this other)
+        (and (instance? IPAddress other)
+             (Arrays/equals bytes ^bytes (address-bytes other)))))
+
+  IObj
+  (meta [this] meta)
+  (withMeta [this new-meta] (IPAddress. new-meta bytes))
+
+  Comparable
+  (compareTo [this other]
+    (let [plen1 (long (address-length bytes))
+          ^bytes prefix2 (address-bytes other),
+          plen2 (long (network-length other))]
+      (IPNetworkComparison/networkCompare bytes plen1 prefix2 plen2)))
+
+  IPAddressOperations
+  (-address? [this] true)
+  (address-bytes [this] bytes)
+  (address-length [this] (address-length bytes))
+
+  IPNetworkOperations
+  (network?* [this] false)
+  (network-length [this] (address-length bytes)))
+
+(ns-unmap *ns* '->IPAddress)
+
+;; BigInteger mapping is internal-only.  BigInteger doesn't preserve the input
+;; byte-array size, so we need to prepend a pseudo-magic prefix to retain the
+;; address length.
+(defn ^:private address->BigInteger
+  "Convert `addr` to an internal-format BigInteger."
+  {:tag `BigInteger}
+  [addr] (->> addr address-bytes (cons (byte 63)) byte-array BigInteger.))
+
+(defn address-add
+  "The `n`th address following `addr` numerically."
+  {:tag `IPAddress}
+  [addr n]
+  (->> (condp instance? n
+         BigInteger n
+         BigInt     (.toBigInteger ^BigInt n)
+         ,,,,,,     (BigInteger/valueOf (long n)))
+       (.add (address->BigInteger addr))
+       address))
+
+(defn address-range
+  "Sequence of addresses from `start` to `stop` *inclusive*."
+  [start stop]
+  (let [stop (address->BigInteger stop)]
+    ((fn step [^BigInteger addr]
+       (lazy-seq
+        (when-not (pos? (.compareTo addr stop))
+          (cons (address addr) (step (.add addr BigInteger/ONE))))))
+     (address->BigInteger start))))
 
 (defn network-compare
   "Compare the prefixes of networks `left` and `right`, with the same result
@@ -84,10 +131,133 @@ prefix length."
 
 (defn network-contains?
   "Determine if network `net` contains the address/network `addr`."
-  ([net addr]
-     (let [length (network-length net)]
-       (and (<= length (network-length addr))
-            (zero? (network-compare false net addr))))))
+  [net addr]
+  (let [length (network-length net)]
+    (and (<= length (network-length addr))
+         (zero? (network-compare false net addr)))))
+
+(defn network-count
+  "Count of addresses in network `net`."
+  [net]
+  (let [nbits (- (address-length net) (network-length net))]
+    (if (> 63 nbits)
+      (bit-shift-left 1 nbits)
+      (BigInt/fromBigInteger (.shiftLeft BigInteger/ONE nbits)))))
+
+(defn network-nth
+  "The `n`th address in the network `net`.  Negative `n`s count backwards
+from the final address at -1."
+  [net n] (address-add net (if (neg? n) (+ n (network-count net)) n)))
+
+(deftype IPNetwork [meta, ^bytes prefix, ^long length]
+  Serializable
+
+  Object
+  (toString [this] (str (string-address prefix) "/" length))
+  (hashCode [this] (bytes-hash-code prefix length))
+  (equals [this other]
+    (or (identical? this other)
+        (and (instance? IPNetwork other)
+             (= length (network-length other))
+             (Arrays/equals prefix ^bytes (address-bytes other)))))
+
+  IObj
+  (meta [this] meta)
+  (withMeta [this new-meta] (IPNetwork. new-meta prefix length))
+
+  Comparable
+  (compareTo [this other]
+    (let [^bytes prefix2 (address-bytes other),
+          plen2 (long (network-length other))]
+      (IPNetworkComparison/networkCompare prefix length prefix2 plen2)))
+
+  ILookup
+  (valAt [this key]
+    (when (network-contains? this key) key))
+  (valAt [this key default]
+    (if (network-contains? this key) key default))
+
+  IFn
+  (invoke [this key]
+    (when (network-contains? this key) key))
+  (invoke [this key default]
+    (if (network-contains? this key) key default))
+
+  Indexed
+  (count [this] (network-count this))
+  (nth [this n] (network-nth this n))
+
+  Seqable
+  (seq [this]
+    (address-range (nth this 0) (nth this -1)))
+
+  IPAddressOperations
+  (-address? [this] false)
+  (address-bytes [this] prefix)
+  (address-length [this] (address-length prefix))
+
+  IPNetworkOperations
+  (network?* [this] true)
+  (network-length [this] length))
+
+(ns-unmap *ns* '->IPNetwork)
+
+(defn address
+  "The IP address for representation `addr`."
+  {:tag `IPAddress}
+  [addr] (-address addr))
+
+(defn ^:private address*
+  [orig ^bytes bytes]
+  (when (-address? bytes)
+    (IPAddress. nil bytes)))
+
+(defn network
+  "The IP network for representation `net` or `prefix` & `length`."
+  {:tag `IPNetwork}
+  ([net] (-network net))
+  ([prefix length] (-network prefix length)))
+
+(defn ^:private network*
+  [orig ^bytes bytes ^long length]
+  (when (network?* bytes length)
+    (IPNetwork. nil bytes length)))
+
+(defn address?
+  "Determine if `addr` is a value which represents an IP address."
+  [addr] (and (satisfies? IPAddressOperations addr)
+              (boolean (-address? addr))))
+
+(defn network?
+  "Determine if `net` is a value which represents an IP network."
+  ([net]
+     (and (satisfies? IPNetworkOperations net)
+          (boolean (network?* net))))
+  ([addr length]
+     (and (satisfies? IPNetworkOperations addr)
+          (boolean (network?* addr length)))))
+
+(defn inet-address
+  "Generate a java.net.InetAddress from the provided value."
+  {:tag `InetAddress}
+  [addr] (InetAddress/getByAddress (address-bytes addr)))
+
+(defn network-trunc
+  "Create a network with a prefix consisting of the first `length` bits of
+`prefix` and a length of `length`."
+  {:tag `IPNetwork}
+  ([prefix]
+     (network-trunc prefix (network-length prefix)))
+  ([prefix length]
+     (network (doto-let [prefix (byte-array (address-bytes prefix))]
+                (loop [zbits (long (- (address-length prefix) length)),
+                       i (->> prefix alength dec long)]
+                  (cond (>= zbits 8) (do (aset prefix i (byte 0))
+                                         (recur (- zbits 8) (dec i)))
+                        (pos? zbits) (->> (bit-shift-left -1 zbits)
+                                          (bit-and (long (aget prefix i)))
+                                          byte (aset prefix i)))))
+              length)))
 
 (defn ->network-set
   "Create a hierarchical set from networks in `coll`."
@@ -109,47 +279,6 @@ prefix length."
       (print-method (first nets) w)
       (recur false (next nets))))
   (.write w "}"))
-
-;; BigInteger mapping is internal-only.  BigInteger doesn't preserve the input
-;; byte-array size, so we need to prepend a pseudo-magic prefix to retain the
-;; address length.
-(defn ^:private address->BigInteger
-  "Convert `addr` to an internal-format BigInteger."
-  ^BigInteger [addr]
-  (->> addr address-bytes (cons (byte 63)) byte-array BigInteger.))
-
-(defn address-add
-  "The `n`th address following `addr` numerically."
-  [addr n]
-  (->> (condp instance? n
-         BigInteger n
-         BigInt     (.toBigInteger ^BigInt n)
-         ,,,,,,     (BigInteger/valueOf (long n)))
-       (.add (address->BigInteger addr))
-       address))
-
-(defn address-range
-  "Sequence of addresses from `start` to `stop` *inclusive*."
-  [start stop]
-  (let [stop (address->BigInteger stop)]
-    ((fn step [^BigInteger addr]
-       (lazy-seq
-        (when-not (pos? (.compareTo addr stop))
-          (cons (address addr) (step (.add addr BigInteger/ONE))))))
-     (address->BigInteger start))))
-
-(defn network-count
-  "Count of addresses in network `net`."
-  [net]
-  (let [nbits (- (address-length net) (network-length net))]
-    (if (> 63 nbits)
-      (bit-shift-left 1 nbits)
-      (BigInt/fromBigInteger (.shiftLeft BigInteger/ONE nbits)))))
-
-(defn network-nth
-  "The `n`th address in the network `net`.  Negative `n`s count backwards
-from the final address at -1."
-  [net n] (address-add net (if (neg? n) (+ n (network-count net)) n)))
 
 (defn network-supernet
   "Network containing the network `net` with a prefix shorter by `n` bits,
@@ -201,143 +330,30 @@ network prefix, default 1."
                                 (step start')))))))]
     (apply network-set (step (address start)))))
 
-(defn- string-address-ipv4 [^bytes bytes]
-  (->> bytes (map ubyte) (str/join ".")))
-
-(letfn [(->short [[m x]] (-> m (bit-shift-left 8) (bit-or x)))
-        (->str [xs] (->> xs (map #(format "%x" %)) (str/join ":")))]
-  (defn- string-address-ipv6 [^bytes bytes]
-    (let [shorts (->> bytes (map ubyte) (partition 2) (map ->short))]
-      (if-let [[nt nd] (longest-run 0 shorts)]
-        (str (->str (take nt shorts)) "::" (->str (drop (+ nt nd) shorts)))
-        (->str shorts)))))
-
-(defn- string-address
-  [^bytes bytes]
-  (case-expr (alength bytes)
-    IPParser/IPV4_BYTE_LEN (string-address-ipv4 bytes)
-    IPParser/IPV6_BYTE_LEN (string-address-ipv6 bytes)))
-
-(deftype IPAddress [meta, ^bytes bytes]
-  Serializable
-
-  Object
-  (toString [this] (string-address bytes))
-  (hashCode [this] (bytes-hash-code bytes))
-  (equals [this other]
-    (or (identical? this other)
-        (and (instance? IPAddress other)
-             (Arrays/equals bytes ^bytes (address-bytes other)))))
-
-  IObj
-  (meta [this] meta)
-  (withMeta [this new-meta] (IPAddress. new-meta bytes))
-
-  Comparable
-  (compareTo [this other]
-    (let [plen1 (long (address-length bytes))
-          ^bytes prefix2 (address-bytes other),
-          plen2 (long (network-length other))]
-      (IPNetworkComparison/networkCompare bytes plen1 prefix2 plen2)))
-
-  IPAddressOperations
-  (address?* [this] true)
-  (address-bytes [this] bytes)
-  (address-length [this] (address-length bytes))
-
-  IPNetworkOperations
-  (network?* [this] false)
-  (network-length [this] (address-length bytes)))
-
-(ns-unmap *ns* '->IPAddress)
-
-(deftype IPNetwork [meta, ^bytes prefix, ^long length]
-  Serializable
-
-  Object
-  (toString [this] (str (string-address prefix) "/" length))
-  (hashCode [this] (bytes-hash-code prefix length))
-  (equals [this other]
-    (or (identical? this other)
-        (and (instance? IPNetwork other)
-             (= length (network-length other))
-             (Arrays/equals prefix ^bytes (address-bytes other)))))
-
-  IObj
-  (meta [this] meta)
-  (withMeta [this new-meta] (IPNetwork. new-meta prefix length))
-
-  Comparable
-  (compareTo [this other]
-    (let [^bytes prefix2 (address-bytes other),
-          plen2 (long (network-length other))]
-      (IPNetworkComparison/networkCompare prefix length prefix2 plen2)))
-
-  ILookup
-  (valAt [this key]
-    (when (network-contains? this key) key))
-  (valAt [this key default]
-    (if (network-contains? this key) key default))
-
-  IFn
-  (invoke [this key]
-    (when (network-contains? this key) key))
-  (invoke [this key default]
-    (if (network-contains? this key) key default))
-
-  Indexed
-  (count [this] (network-count this))
-  (nth [this n] (network-nth this n))
-
-  Seqable
-  (seq [this]
-    (address-range (nth this 0) (nth this -1)))
-
-  IPAddressOperations
-  (address?* [this] false)
-  (address-bytes [this] prefix)
-  (address-length [this] (address-length prefix))
-
-  IPNetworkOperations
-  (network?* [this] true)
-  (network-length [this] length))
-
-(ns-unmap *ns* '->IPNetwork)
-
-(defn- address*
-  [orig ^bytes bytes]
-  (when (address?* bytes)
-    (IPAddress. nil bytes)))
-
-(defn- network*
-  [orig ^bytes bytes ^long length]
-  (when (network?* bytes length)
-    (IPNetwork. nil bytes length)))
-
 (extend-type IPAddress
   IPAddressConstruction
-  (address [this] this)
+  (-address [this] this)
 
   IPNetworkConstruction
-  (network
+  (-network
     ([this] (IPNetwork. nil (address-bytes this) (address-length this)))
     ([this length] (network* this (address-bytes this) length))))
 
 (extend-type IPNetwork
   IPAddressConstruction
-  (address [this] (IPAddress. nil (address-bytes this)))
+  (-address [this] (IPAddress. nil (address-bytes this)))
 
   IPNetworkConstruction
-  (network
+  (-network
     ([this] this)
     ([this length] (network* this (address-bytes this) length))))
 
 (extend-type (java.lang.Class/forName "[B")
   IPAddressConstruction
-  (address [this] (address* this this))
+  (-address [this] (address* this this))
 
   IPAddressOperations
-  (address?* [this]
+  (-address? [this]
     (let [len (alength ^bytes this)]
       (or (= len IPParser/IPV4_BYTE_LEN)
           (= len IPParser/IPV6_BYTE_LEN))))
@@ -345,7 +361,7 @@ network prefix, default 1."
   (address-length [this] (* 8 (alength ^bytes this)))
 
   IPNetworkConstruction
-  (network
+  (-network
     ([this] (network* this this (address-length this)))
     ([this length] (network* this this length)))
 
@@ -353,7 +369,7 @@ network prefix, default 1."
   (network?*
     ([this] false)
     ([this length]
-       (and (address?* this)
+       (and (-address? this)
             (>= length 0)
             (<= length (address-length this))
             (->> (iterate #(if (pos? %) (- % 8) 0) length)
@@ -364,10 +380,10 @@ network prefix, default 1."
                  (every? zero?)))))
   (network-length [this] (address-length this)))
 
-(defn- string-network-split
+(defn ^:private string-network-split
   [net] (str/split net #"/" 2))
 
-(defn- string-network-parts
+(defn ^:private string-network-parts
   [net] (let [[prefix length] (string-network-split net)
               length (when length
                        (or (ignore-errors (Long/parseLong length)) -1))]
@@ -375,10 +391,10 @@ network prefix, default 1."
 
 (extend-type String
   IPAddressConstruction
-  (address [addr] (address* addr (address-bytes addr)))
+  (-address [addr] (address* addr (address-bytes addr)))
 
   IPAddressOperations
-  (address?* [this]
+  (-address? [this]
     (IPParser/isValid (first (string-network-split this))))
   (address-bytes [this]
     (IPParser/parse (first (string-network-split this))))
@@ -386,7 +402,7 @@ network prefix, default 1."
     (IPParser/length (first (string-network-split this))))
 
   IPNetworkConstruction
-  (network
+  (-network
     ([this]
        (let [[prefix length] (string-network-parts this)]
          (if length
@@ -410,11 +426,11 @@ network prefix, default 1."
 
 (extend-type InetAddress
   IPAddressConstruction
-  (address [addr]
+  (-address [addr]
     (address* (.getHostAddress addr) (.getAddress addr)))
 
   IPAddressOperations
-  (address?* [addr] true)
+  (-address? [addr] true)
   (address-bytes [addr] (.getAddress addr))
   (address-length [addr]
     (case-expr (class addr)
@@ -423,7 +439,7 @@ network prefix, default 1."
       -1))
 
   IPNetworkConstruction
-  (network
+  (-network
     ([this] (IPNetwork. nil (address-bytes this) (address-length this)))
     ([this length] (network* this (address-bytes this) length)))
 
@@ -435,10 +451,10 @@ network prefix, default 1."
 
 (extend-type BigInteger
   IPAddressConstruction
-  (address [addr] (address* addr (address-bytes addr)))
+  (-address [addr] (address* addr (address-bytes addr)))
 
   IPAddressOperations
-  (address?* [addr] true)
+  (-address? [addr] true)
   (address-bytes [addr]
     (let [b (.toByteArray addr),
           n (if (> (alength b) IPParser/IPV6_BYTE_LEN)
@@ -451,7 +467,7 @@ network prefix, default 1."
       IPParser/IPV4_BIT_LEN))
 
   IPNetworkConstruction
-  (network
+  (-network
     ([this] (IPNetwork. nil (address-bytes this) (address-length this)))
     ([this length] (network* this (address-bytes this) length)))
 

@@ -22,8 +22,7 @@ See the tests for examples."
 
 (def ^:dynamic *default-psl-url*
   "URL of the default Mozilla Public Suffix List file."
-  (str "http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/"
-       "effective_tld_names.dat?raw=1"))
+  "https://publicsuffix.org/list/effective_tld_names.dat")
 
 (defn load
   "Load a Mozilla Public Suffix List format file from the Reader `source`."

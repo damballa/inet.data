@@ -1,5 +1,7 @@
 # inet.data
 
+[![Build Status](https://secure.travis-ci.org/damballa/inet.data.png)](http://travis-ci.org/damballa/inet.data)
+
 Inet.data is a library for modeling various Internet-related conceptual
 entities as *data*, supporting applications which are *about* the modeled
 entities versus *interfacing* with them.

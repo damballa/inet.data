@@ -18,7 +18,8 @@
           :sources ["src/clojure"]
           :exclude [inet.data.util]
           :output-dir "tmp/codox"}
-  :aliases {"all" ["with-profile" ~(str "+clojure-1-4:"
+  :aliases {"prep" ["do" "ragel," "javac"]
+            "all" ["with-profile" ~(str "+clojure-1-4:"
                                         "+clojure-1-5:"
                                         "+clojure-1-6")]}
   :profiles {:provided {:dependencies

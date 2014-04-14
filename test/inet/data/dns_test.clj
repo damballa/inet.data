@@ -72,6 +72,15 @@
   (is (not (dns/domain-subdomain? "example.com" "wwwexample.com"))
       "Domain does not have purely lexicographic suffixes as subdomains"))
 
+(deftest test-domain-hostname?
+  (is (dns/domain-hostname? "com"))
+  (is (dns/domain-hostname? "example.com"))
+  (is (not (dns/domain-hostname? "192.168.1.1")))
+  (is (not (dns/domain-hostname? "example..com")))
+  (is (not (dns/domain-hostname? "-example-.com")))
+  (is (not (dns/domain-hostname? "example_underbar.com")))
+  (is (dns/domain-hostname? "example_underbar.com" true)))
+
 (deftest test-domain-utility
   (is (= '("www" "example" "com") (dns/domain-labels "www.example.com"))
       "Turn domain into sequence of labels.")

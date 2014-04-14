@@ -54,6 +54,7 @@ isValidHostname(byte[] data, int length, boolean underscores) {
         return false;
 
     int lablen = 0;
+    boolean letter = false;
 
     int cs = 0;
     int p = 0;
@@ -65,9 +66,12 @@ isValidHostname(byte[] data, int length, boolean underscores) {
         action in_label { (lablen-- > 0) }
         action not_in_label { (lablen <= 0) }
         action underscores { underscores }
+        action letter { letter = true; }
 
         lablen = 1..63 $beg_label;
-        let_dig = alnum when in_label;
+        let = ( alpha when in_label ) $letter;
+        dig = digit when in_label;
+        let_dig = let | dig;
         hyp = ( "-" | "_" when underscores ) when in_label;
         let_dig_hyp = let_dig | hyp;
         ldh_str = let_dig_hyp+;
@@ -84,7 +88,7 @@ isValidHostname(byte[] data, int length, boolean underscores) {
     %% write init;
     %% write exec;
 
-    if (cs < domain_first_final || lablen > 0)
+    if (cs < domain_first_final || lablen > 0 || !letter)
         return false;
     return true;
 }

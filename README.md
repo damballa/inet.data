@@ -72,7 +72,7 @@ which is also implemented for strings and byte arrays.
 
 (let [gtlds (dns/domain-set "com" "net" "org")]
   (get gtlds "example.com") ;;=> (#dns/domain "com")
-  (get gtld "does.not.exist") ;;=> nil
+  (get gtlds "does.not.exist") ;;=> nil
   )
 ```
 

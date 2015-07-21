@@ -88,7 +88,7 @@ isValidHostname(byte[] data, int length, boolean underscores) {
     %% write init;
     %% write exec;
 
-    if (cs < domain_first_final || lablen > 0 || !letter)
+    if (cs < hostname_first_final || lablen > 0 || !letter)
         return false;
     return true;
 }

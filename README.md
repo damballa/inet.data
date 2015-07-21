@@ -12,8 +12,13 @@ Inet.data is available on Clojars.  Add this `:dependency` to your Leiningen
 `project.clj`:
 
 ```clj
-[inet.data "0.5.6"]
+[com.damballa/inet.data "0.5.7"]
 ```
+
+Please note that the group ID has changed with with the 0.5.7 release from
+`inet.data` to `com.damballa`.  New releases will also be pushed under the
+`inet.data` group ID until 0.6.0, but that group ID should be considered
+deprecated.
 
 ## Usage
 

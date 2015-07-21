@@ -25,7 +25,7 @@ isValid(byte[] data) {
         action in_label { (lablen-- > 0) }
         action not_in_label { (lablen <= 0) }
 
-        lablen = 1..63 $beg_label;
+        lablen = (1..63 when not_in_label) $beg_label;
         content = ( any when in_label )+;
         terminal = '' when not_in_label;
         label = lablen content <: terminal;
@@ -68,7 +68,7 @@ isValidHostname(byte[] data, int length, boolean underscores) {
         action underscores { underscores }
         action letter { letter = true; }
 
-        lablen = 1..63 $beg_label;
+        lablen = (1..63 when not_in_label) $beg_label;
         let = ( alpha when in_label ) $letter;
         dig = digit when in_label;
         let_dig = let | dig;

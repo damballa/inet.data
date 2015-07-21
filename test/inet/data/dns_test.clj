@@ -79,7 +79,8 @@
   (is (not (dns/domain-hostname? "example..com")))
   (is (not (dns/domain-hostname? "-example-.com")))
   (is (not (dns/domain-hostname? "example_underbar.com")))
-  (is (dns/domain-hostname? "example_underbar.com" true)))
+  (is (dns/domain-hostname? "example_underbar.com" true))
+  (is (not (dns/domain-hostname? "example.com/bar"))))
 
 (deftest test-domain-utility
   (is (= '("www" "example" "com") (dns/domain-labels "www.example.com"))

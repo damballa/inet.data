@@ -88,6 +88,11 @@
 
 (ns-unmap *ns* '->IPAddress)
 
+(defn address
+  "The IP address for representation `addr`."
+  {:tag `IPAddress}
+  [addr] (-address addr))
+
 ;; BigInteger mapping is internal-only.  BigInteger doesn't preserve the input
 ;; byte-array size, so we need to prepend a pseudo-magic prefix to retain the
 ;; address length.
@@ -201,11 +206,6 @@ from the final address at -1."
   (network-length [this] length))
 
 (ns-unmap *ns* '->IPNetwork)
-
-(defn address
-  "The IP address for representation `addr`."
-  {:tag `IPAddress}
-  [addr] (-address addr))
 
 (defn ^:private address*
   [orig ^bytes bytes]

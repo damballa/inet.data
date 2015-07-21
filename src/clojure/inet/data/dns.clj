@@ -28,6 +28,8 @@ given domain."
   (^:private -domain [dom]
     "Produce a DNSDomain from `dom`."))
 
+(declare domain)
+
 (defprotocol ^:no-doc DNSDomainOperations
   "Operations on objects which may be treated as domains."
   (^:private -domain? [dom]

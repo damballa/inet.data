@@ -97,7 +97,7 @@ need to provide their own list(s) customized for their particular use cases.
 
 ## License
 
-Copyright © 2012-2014 Marshall Bockrath-Vandegrift & Damballa, Inc.
+Copyright © 2012-2015 Marshall Bockrath-Vandegrift & Damballa, Inc.
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.

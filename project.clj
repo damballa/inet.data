@@ -23,7 +23,7 @@
                                         "+clojure-1-7")]}
   :profiles {:provided {:dependencies
                         [[byteable "0.2.0"]
-                         [com.damballa/abracad "0.4.10"]]}
+                         [com.damballa/abracad "0.4.12"]]}
              :clojure-1-6 {:dependencies
                            [[org.clojure/clojure "1.6.0"]]}
              :clojure-1-7 {:dependencies
